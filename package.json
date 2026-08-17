@@ -1,0 +1,107 @@
+{
+  "name": "dsh-universal-attachments",
+  "version": "0.1.0",
+  "description": "Remote-safe files, folders, images, video, and arbitrary attachments for DeepSeek Harness",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/demacia1314/dsh-airdrop.git"
+  },
+  "homepage": "https://github.com/demacia1314/dsh-airdrop#readme",
+  "bugs": {
+    "url": "https://github.com/demacia1314/dsh-airdrop/issues"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./typert": {
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-api-remotes",
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-attachment",
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-primitives"
+      ]
+    }
+  },
+  "files": [
+    "lib",
+    "scripts",
+    "cordis.patch.yml",
+    "README.md",
+    "README.zh-CN.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --root .",
+    "test:watch": "vitest --root .",
+    "verify:artifacts": "node scripts/verify-artifacts.mjs",
+    "prepack": "npm run build && npm run verify:artifacts",
+    "pack:check": "pnpm pack --pack-destination .artifacts"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "attachments",
+    "file-upload",
+    "folder-upload",
+    "drag-and-drop",
+    "remote-upload"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-attachment": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-host-webserver": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-llm": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-session": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-typert-protocol": "0.1.0-rc.6"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-api-remotes": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-attachment": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-client-runtime": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-client-ui-attachment": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-client-ui-conversation": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-client-ui-primitives": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-client-ui-slots": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-host-webserver": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-llm": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-session": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-typert-protocol": "0.1.0-rc.6",
+    "@types/node": "^24.0.0",
+    "@types/react": "^18.3.0",
+    "react": "^18.3.0",
+    "tsdown": "^0.12.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.0",
+    "zod": "^4.4.3"
+  },
+  "directories": {
+    "lib": "lib",
+    "test": "tests"
+  },
+  "author": ""
+}

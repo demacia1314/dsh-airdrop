@@ -1,0 +1,4 @@
+This project was designed with reference to the MIT-licensed dsh-attachments
+project by CocoSgt. It uses the same public DeepSeek Harness extension points,
+but implements a separate streaming upload, persistence, directory, and remote
+preview architecture.
