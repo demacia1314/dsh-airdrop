@@ -1,0 +1,12 @@
+node_modules/
+lib/
+.artifacts/
+.dsh/
+kaggle-silver-avatar/
+coverage/
+*.log
+*.tgz
+__pycache__/
+.env*
+*.pem
+*.key
