@@ -100,10 +100,11 @@ body > [role='menu']:has([data-dua-attach-choice]) [role='menuitem'] > span:last
 .dua-dock {
   display: grid;
   gap: 6px;
-  width: min(820px, 100%);
-  margin: 0 auto;
-  padding: 4px 10px 8px;
   box-sizing: border-box;
+  width: calc(100% - var(--dsh-composer-side-clearance, 16px) - var(--dsh-composer-side-clearance, 16px) - var(--dsh-composer-dock-inset, 8px) - var(--dsh-composer-dock-inset, 8px));
+  max-width: calc(var(--dsh-composer-card-max-width, 780px) - var(--dsh-composer-dock-inset, 8px) - var(--dsh-composer-dock-inset, 8px));
+  margin: 0 auto;
+  padding: 0 var(--dsh-composer-dock-inset, 8px) 4px;
 }
 .dua-native-image-rail {
   min-width: 0;
@@ -196,23 +197,14 @@ body > [role='menu']:has([data-dua-attach-choice]) [role='menuitem'] > span:last
   scrollbar-width: none;
 }
 .dua-file-list::-webkit-scrollbar { display: none; }
-.dua-submit-row {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  min-height: 28px;
-}
-.dua-submit-row > span {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--dsw-alias-label-error, #b42318);
+.dua-submit-status {
+  justify-self: end;
+  min-height: 18px;
+  color: var(--dsw-alias-label-tertiary, #6e7785);
   font-size: 12px;
   line-height: 18px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
-.dua-submit-button { flex: none; }
+.dua-submit-error { color: var(--dsw-alias-label-error, #b42318); }
 .dua-file-row {
   --dua-progress: 0%;
   position: relative;
@@ -355,10 +347,10 @@ body > [role='menu']:has([data-dua-attach-choice]) [role='menuitem'] > span:last
 }
 .dua-chat-attachments {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 220px));
+  grid-template-columns: repeat(2, minmax(0, 250px));
   justify-content: end;
   gap: 6px;
-  width: min(446px, calc(100% - 48px));
+  max-width: min(525px, 82%);
 }
 .dua-chat-attachment {
   display: grid;
@@ -703,11 +695,10 @@ body > [role='presentation']:has(> .dua-preview-modal) > div:first-child {
   .dua-native-image-rail [role='group'] > div > button:last-child { opacity: 1; }
 }
 @media (max-width: 560px) {
-  .dua-dock { padding-inline: 8px; }
   .dua-file-row { flex-basis: min(214px, calc(100vw - 38px)); }
   .dua-chat-attachments {
     grid-template-columns: minmax(0, 1fr);
-    width: min(300px, calc(100% - 24px));
+    max-width: min(300px, 82%);
   }
   .dua-drop-card small { display: none; }
   body > [role='presentation']:has(> .dua-preview-modal) { padding: 8px; }

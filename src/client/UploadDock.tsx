@@ -11,7 +11,6 @@ import {
   type AttachmentRailItem,
 } from '@deepseek-ai/dsh-client-ui-attachment'
 import {
-  Button,
   IconArchiveOutline20,
   IconCloseOutline16,
   IconCodeOutline16,
@@ -19,7 +18,6 @@ import {
   IconLoadingOutline16,
   IconPaperclipOutline16,
   IconPlayOutline16,
-  IconSendOutline16,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { SessionId } from '@deepseek-ai/dsh-client-runtime/client'
 import { fileExtension, fileVisualKind } from './filekind.js'
@@ -107,6 +105,11 @@ export function UploadDock({ sessionId, input, store, api, t }: UploadDockProps)
   const lc = t ?? tr
   const previewRequests = useRef(new Set<string>())
   const previousNativeInput = useRef({ imageCount: input?.imageIds?.length ?? 0, draftRev: input?.draftRev ?? 0 })
+  const bridgeState = useRef<{ active: boolean; draftEmpty: boolean; submit: () => void }>({
+    active: false,
+    draftEmpty: true,
+    submit: () => {},
+  })
   const version = useSyncExternalStore(
     store?.subscribe ?? (() => () => {}),
     () => key === undefined ? 0 : store?.version(key) ?? 0,
@@ -213,31 +216,11 @@ export function UploadDock({ sessionId, input, store, api, t }: UploadDockProps)
     if (next !== nativeSubmission) setNativeSubmission(next)
   }, [attachmentDraftId, attachmentOnlyReady, inputDraftRev, nativeImageCount, nativeSubmission, roots])
 
-  const imageRoots = roots.filter(root => {
-    const local = store?.root(root.rootId)
-    return local !== undefined
-      && local.error === undefined
-      && local.previewUrl !== undefined
-      && local.previewMime?.startsWith('image/') === true
-  })
-  const imageIds = new Set(imageRoots.map(root => root.rootId))
-  const otherRoots = roots.filter(root => !imageIds.has(root.rootId))
-  const imageItems: readonly ImageRailRoot[] = imageRoots.flatMap(root => {
-    const previewUrl = store?.root(root.rootId)?.previewUrl
-    return previewUrl === undefined ? [] : [{
-      id: root.rootId,
-      previewUrl,
-      alt: root.name,
-      removeLabel: lc('upload.remove', { name: root.name }),
-      root,
-    }]
-  })
-  if (key === undefined || (roots.length === 0 && preparations.length === 0)) return null
-
   const submitAttachments = (): void => {
     const calls = api?.()
     if (
       calls === undefined
+      || key === undefined
       || draft === null
       || !attachmentOnlyReady
       || inputDraft.trim() !== ''
@@ -268,6 +251,67 @@ export function UploadDock({ sessionId, input, store, api, t }: UploadDockProps)
       setSubmitting(false)
     })
   }
+
+  // Attachments-only send rides the composer's native primary button: while
+  // every upload is ready and the draft is empty, the button (disabled by the
+  // native empty-draft guard) is force-enabled and its click is claimed here.
+  const bridgeActive = key !== undefined
+    && attachmentOnlyReady
+    && inputDraft.trim() === ''
+    && !hasNativeImages
+    && !awaitingNativeSubmission
+    && !submitting
+  bridgeState.current = {
+    active: bridgeActive,
+    draftEmpty: inputDraft.trim() === '' && !hasNativeImages,
+    submit: submitAttachments,
+  }
+
+  useEffect(() => {
+    const seat = store?.current()?.dropTarget
+    if (seat === undefined) return
+    const button = seat.querySelector('button[class*="_primary"]')
+    if (!(button instanceof HTMLButtonElement)) return
+    const onClick = (event: MouseEvent): void => {
+      if (!bridgeState.current.active) return
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      bridgeState.current.submit()
+    }
+    button.addEventListener('click', onClick, true)
+    if (bridgeActive && button.disabled) {
+      button.disabled = false
+      button.dataset.duaSendBridge = '1'
+    }
+    return () => {
+      button.removeEventListener('click', onClick, true)
+      if (button.dataset.duaSendBridge === '1') {
+        delete button.dataset.duaSendBridge
+        if (!bridgeState.current.active && bridgeState.current.draftEmpty) button.disabled = true
+      }
+    }
+  }, [bridgeActive, inputDraft, key, nativeImageCount, store, version])
+
+  const imageRoots = roots.filter(root => {
+    const local = store?.root(root.rootId)
+    return local !== undefined
+      && local.error === undefined
+      && local.previewUrl !== undefined
+      && local.previewMime?.startsWith('image/') === true
+  })
+  const imageIds = new Set(imageRoots.map(root => root.rootId))
+  const otherRoots = roots.filter(root => !imageIds.has(root.rootId))
+  const imageItems: readonly ImageRailRoot[] = imageRoots.flatMap(root => {
+    const previewUrl = store?.root(root.rootId)?.previewUrl
+    return previewUrl === undefined ? [] : [{
+      id: root.rootId,
+      previewUrl,
+      alt: root.name,
+      removeLabel: lc('upload.remove', { name: root.name }),
+      root,
+    }]
+  })
+  if (key === undefined || (roots.length === 0 && preparations.length === 0)) return null
 
   const remove = (root: RootSummary): void => {
     const calls = api?.()
@@ -372,21 +416,12 @@ export function UploadDock({ sessionId, input, store, api, t }: UploadDockProps)
           })}
         </div>
       )}
-      {inputDraft.trim() === '' && !hasNativeImages && !awaitingNativeSubmission && (
-        <div className="dua-submit-row">
-          {submitError !== undefined && <span role="alert">{submitError}</span>}
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            icon={<IconSendOutline16 />}
-            className="dua-submit-button"
-            disabled={!attachmentOnlyReady || submitting}
-            aria-busy={submitting || undefined}
-            onClick={submitAttachments}
-          >
-            {submitting ? lc('upload.sending') : lc('upload.send')}
-          </Button>
+      {inputDraft.trim() === '' && !hasNativeImages && !awaitingNativeSubmission && (submitError !== undefined || submitting) && (
+        <div
+          className={`dua-submit-status ${submitError !== undefined ? 'dua-submit-error' : ''}`}
+          role={submitError !== undefined ? 'alert' : 'status'}
+        >
+          {submitError ?? lc('upload.sending')}
         </div>
       )}
       {store !== undefined && api !== undefined && draft !== null && (
