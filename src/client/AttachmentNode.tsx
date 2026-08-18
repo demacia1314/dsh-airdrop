@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
+  IconArchiveOutline20,
+  IconCodeOutline16,
   IconFolderClose16,
   IconPaperclipOutline16,
   IconPlayOutline16,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ChatNodeViewProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type { AttachmentHistoryRoot } from '../shared/manifest.js'
+import { fileExtension, fileVisualKind } from './filekind.js'
 import { formatSize } from './intake.js'
 import { tr, type LocaleProps } from './locales.js'
 import { RootPreview } from './preview.js'
@@ -42,12 +45,6 @@ function storedRootSummary(root: AttachmentHistoryRoot): RootSummary {
   }
 }
 
-function extension(name: string): string {
-  const dot = name.lastIndexOf('.')
-  if (dot <= 0 || dot === name.length - 1) return 'FILE'
-  return name.slice(dot + 1).replace(/[^a-z0-9]/giu, '').slice(0, 5).toUpperCase() || 'FILE'
-}
-
 function meta(root: AttachmentHistoryRoot): string {
   if (root.kind === 'folder') return `${root.fileCount.toLocaleString()} · ${formatSize(root.totalSize)}`
   return formatSize(root.totalSize)
@@ -71,10 +68,18 @@ function AttachmentVisual({ root, preview }: {
       </span>
     )
   }
+  const kind = fileVisualKind(root.name, root.mime)
+  const icon = kind === 'archive'
+    ? <IconArchiveOutline20 size={15} />
+    : kind === 'code'
+      ? <IconCodeOutline16 size={15} />
+      : kind === 'audio'
+        ? <IconPlayOutline16 size={13} />
+        : <IconPaperclipOutline16 size={15} />
   return (
-    <span className="dua-chat-visual dua-chat-file" aria-hidden="true">
-      <IconPaperclipOutline16 size={15} />
-      <small>{extension(root.name)}</small>
+    <span className={`dua-chat-visual dua-chat-file dua-kind-${kind}`} aria-hidden="true">
+      {icon}
+      <small>{fileExtension(root.name)}</small>
     </span>
   )
 }

@@ -12,7 +12,9 @@ import {
 } from '@deepseek-ai/dsh-client-ui-attachment'
 import {
   Button,
+  IconArchiveOutline20,
   IconCloseOutline16,
+  IconCodeOutline16,
   IconFolderClose16,
   IconLoadingOutline16,
   IconPaperclipOutline16,
@@ -20,6 +22,7 @@ import {
   IconSendOutline16,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { SessionId } from '@deepseek-ai/dsh-client-runtime/client'
+import { fileExtension, fileVisualKind } from './filekind.js'
 import { formatSize } from './intake.js'
 import { rpcText, tr, type Key, type LocaleProps } from './locales.js'
 import { RootPreview } from './preview.js'
@@ -83,7 +86,20 @@ function FileVisual({ root, store }: { readonly root: RootSummary; readonly stor
       </span>
     )
   }
-  return <span className="dua-file-visual dua-file-generic" aria-hidden="true"><IconPaperclipOutline16 size={17} /></span>
+  const kind = fileVisualKind(root.name, local?.previewMime)
+  const icon = kind === 'archive'
+    ? <IconArchiveOutline20 size={16} />
+    : kind === 'code'
+      ? <IconCodeOutline16 size={16} />
+      : kind === 'audio'
+        ? <IconPlayOutline16 size={14} />
+        : <IconPaperclipOutline16 size={16} />
+  return (
+    <span className={`dua-file-visual dua-file-tile dua-kind-${kind}`} aria-hidden="true">
+      {icon}
+      <small>{fileExtension(root.name)}</small>
+    </span>
+  )
 }
 
 export function UploadDock({ sessionId, input, store, api, t }: UploadDockProps): ReactNode {

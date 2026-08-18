@@ -266,6 +266,22 @@ body > [role='menu']:has([data-dua-attach-choice]) [role='menuitem'] > span:last
 }
 .dua-file-folder { background: #f5e8ad; color: #66551c; }
 .dua-file-generic { background: #e9eef5; color: #385d84; }
+.dua-file-tile { align-content: center; gap: 0; }
+.dua-file-tile small {
+  max-width: 28px;
+  overflow: hidden;
+  font-size: 7px;
+  line-height: 9px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dua-kind-audio { background: #e9e1f6; color: #5d3fa3; }
+.dua-kind-pdf { background: #fbe6e4; color: #b42318; }
+.dua-kind-archive { background: #f3ead4; color: #7d5c15; }
+.dua-kind-code { background: #e1efe7; color: #20714f; }
+.dua-kind-text { background: #edf0f3; color: #4f5a68; }
+.dua-kind-generic { background: #e9eef5; color: #385d84; }
 .dua-file-video { background: #171b22; color: #fff; }
 .dua-file-video video { width: 100%; height: 100%; object-fit: cover; opacity: .82; }
 .dua-file-video > span {
