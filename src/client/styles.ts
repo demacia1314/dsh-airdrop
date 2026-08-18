@@ -268,12 +268,6 @@ body > [role='menu']:has([data-dua-attach-choice]) [role='menuitem'] > span:last
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.dua-kind-audio { background: #e9e1f6; color: #5d3fa3; }
-.dua-kind-pdf { background: #fbe6e4; color: #b42318; }
-.dua-kind-archive { background: #f3ead4; color: #7d5c15; }
-.dua-kind-code { background: #e1efe7; color: #20714f; }
-.dua-kind-text { background: #edf0f3; color: #4f5a68; }
-.dua-kind-generic { background: #e9eef5; color: #385d84; }
 .dua-file-video { background: #171b22; color: #fff; }
 .dua-file-video video { width: 100%; height: 100%; object-fit: cover; opacity: .82; }
 .dua-file-video > span {
@@ -346,9 +340,9 @@ body > [role='menu']:has([data-dua-attach-choice]) [role='menuitem'] > span:last
   font-family: var(--ds-font-family, ui-sans-serif, system-ui, sans-serif);
 }
 .dua-chat-attachments {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 250px));
-  justify-content: end;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 6px;
   max-width: min(525px, 82%);
 }
@@ -357,6 +351,8 @@ body > [role='menu']:has([data-dua-attach-choice]) [role='menuitem'] > span:last
   grid-template-columns: 38px minmax(0, 1fr);
   align-items: center;
   gap: 8px;
+  flex: 1 1 220px;
+  max-width: 250px;
   min-width: 0;
   min-height: 46px;
   padding: 4px 8px 4px 4px;
@@ -691,15 +687,21 @@ body > [role='presentation']:has(> .dua-preview-modal) > div:first-child {
 .dua-folder-list small { color: var(--dsw-alias-label-tertiary, #6e7785); white-space: nowrap; }
 .dua-folder-list > .dua-preview-note { padding: 10px 4px 0; }
 
+/* Kind colors come after every base visual rule so they win on equal specificity. */
+.dua-kind-audio { background: #e9e1f6; color: #5d3fa3; }
+.dua-kind-pdf { background: #fbe6e4; color: #b42318; }
+.dua-kind-archive { background: #f3ead4; color: #7d5c15; }
+.dua-kind-code { background: #e1efe7; color: #20714f; }
+.dua-kind-text { background: #edf0f3; color: #4f5a68; }
+.dua-kind-generic { background: #e9eef5; color: #385d84; }
+
 @media (hover: none), (pointer: coarse) {
   .dua-native-image-rail [role='group'] > div > button:last-child { opacity: 1; }
 }
 @media (max-width: 560px) {
   .dua-file-row { flex-basis: min(214px, calc(100vw - 38px)); }
-  .dua-chat-attachments {
-    grid-template-columns: minmax(0, 1fr);
-    max-width: min(300px, 82%);
-  }
+  .dua-chat-attachments { max-width: min(300px, 82%); }
+  .dua-chat-attachment { flex-basis: 100%; max-width: none; }
   .dua-drop-card small { display: none; }
   body > [role='presentation']:has(> .dua-preview-modal) { padding: 8px; }
   .dua-preview-modal { width: 100%; max-height: 92vh; }
