@@ -1,29 +1,46 @@
 # dsh-airdrop
 
+给 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) Web 界面用的附件插件。把文件——或者整个文件夹——拖到 DSH 窗口的任意位置，它就会上传进当前会话的工作区，agent 直接就能读。图片、视频、音频、PDF、压缩包都行：浏览器能选中的，插件就能传。
+
 [English](README.md) | 简体中文
 
-面向 DeepSeek Harness（dsh）的远程安全附件插件：把浏览器中的文件、文件夹、图片、音频、视频或任意其他字节类型上传到 DSH 所在服务器的会话工作区；图片显示缩略图，其他附件显示紧凑文件行。
+按 **DSH 0.1.0-rc.6（2026-08-13 发布）** 的公开接口开发。DSH 还在 Developer Preview 阶段，升级前建议先拿一个测试 profile 试试。
 
-本项目按 **DSH 0.1.0-rc.6（2026-08-13 发布）** 的公开插件接口开发。DSH 仍处于 Developer Preview，升级前请先在测试 profile 验证。
+> 关于名字：仓库叫 `dsh-airdrop`，但安装包名仍是 `dsh-universal-attachments`。改包名会破坏已有安装，所以不动。
 
-## 能力
+## 用法
 
-- 把文件或整个文件夹拖到页面任意位置；松手后先显示读取卡片，再开始上传。
-- 回形针菜单分别选择文件和文件夹；文件选择不设置 `accept` 限制。
-- 目录上传保留相对层级，支持现代 File System Access API，并兼容 `webkitGetAsEntry` / `webkitdirectory`。
-- 文件字节经同源 HTTP 分片流式上传；不使用 Base64 JSON RPC，不受 32 MB RPC 现实上限约束。
-- 上传进度、失败状态、移除操作和服务器端持久化草稿。
-- 图片、视频、音频和文本在浏览器中预览；视频端点支持 HTTP Range，可拖动进度条。
-- 其他格式仍可上传和下载，不会因 MIME 类型被插件拒绝。
-- 发送下一条消息时，Host 在 `agent/pre-step` 中注入服务器工作区相对路径；模型按需使用文件工具、`read_image` 或其他能力读取。
-- 符合当前 DSH 图片限额的 PNG、JPEG、WebP、GIF 会经 `ctx.attachments` 持久化，并由 DSH 原生消息图库和灯箱显示。
-- 附件通知保留兼容展示：旧图片可内联预览，文件、文件夹、音频和视频显示紧凑行。
+- 把文件或文件夹拖进窗口任意位置。输入框上方的 dock 里每个文件一张卡片，带类型图标、大小和进度。
+- 卡片可以直接在浏览器里预览——图片、可拖进度条的视频、音频、文本——发送前后都能看。
+- 用平时的发送按钮发送。传完的附件会随消息一起发出，agent 拿到的是工作区相对路径，可以用文件工具或 `read_image` 打开。
+- 符合 DSH 图片限额（PNG、JPEG、WebP、GIF）的图片走原生图片链路，进自带的消息图库和灯箱；其他格式在对话里显示为紧凑卡片。
+- 不按文件类型拒绝任何内容。"任意文件"的意思是不过滤字节，不保证模型能读懂每种格式。插件不会自己执行、解压或转码上传内容。
 
-“任意文件”表示**不按格式拒绝字节内容**，不表示无限大小，也不保证当前模型能理解每一种文件格式。插件不会自动执行、解压或转码用户文件。
+## 安装
 
-## 为什么远程部署可用
+从源码构建：
 
-原生本地路径方案会把浏览器所在机器的路径交给服务器，远端 DSH 无法读取。本插件的链路是：
+```powershell
+pnpm install
+pnpm run check
+pnpm run test
+pnpm run build
+pnpm pack
+dsh plugin --profile web add .\dsh-universal-attachments-0.1.1.tgz
+dsh web
+```
+
+发布到 npm 之后可以省掉构建：
+
+```powershell
+dsh plugin --profile web add dsh-universal-attachments
+```
+
+装完重启 `dsh web` 生效。会话必须有工作区 `cwd`——没有工作区就没有安全的落盘位置。
+
+## 为什么远程部署也能用
+
+浏览器和 DSH 服务器通常不在一台机器上，把本地文件路径丢给服务器是读不到的。所以链路是这样的：
 
 ```text
 用户浏览器 File/Directory
@@ -38,103 +55,61 @@ DSH Host WebServer
 Agent filesystem tools
 ```
 
-Host 只接受 `sessionId`，并通过 `ctx.sessions.get(sessionId).header.cwd` 获取权威工作区。客户端不能指定服务器写入目录。
+浏览器只发字节，走同源 HTTP 分片——不用 Base64 RPC，也就没有 32 MB 的现实上限。工作区由 Host 根据 `sessionId` 自己解析，客户端不能指定服务器目录。每个 session 在 `.dsh/uploads/` 下有独立命名空间，服务端会检查路径穿越、绝对路径、盘符、UNC、NUL、Windows 保留名、大小写冲突、父目录 symlink/junction 和叶文件 hard link。上传和预览路由要短期 capability 票据，强制同源校验，不开 CORS。
 
-## 安装
+草稿能扛重启：待发送的附件只有在对应的 `user/message` 提交、且 session durability barrier 成功之后，才会转入历史态。
 
-本地构建：
+## 内部结构
 
-```powershell
-pnpm install
-pnpm run check
-pnpm run test
-pnpm run build
-pnpm pack
-```
+- Host 侧：`TypertRemoteService` 负责 JSON 控制面（批次、条目、列表、删除、预览票据）;`ctx.webServer` 的 prefix 路由负责收发原始字节。写入绑定同一个已验证的文件句柄、可回滚，传了一半的文件不会漏进提示词或预览。
+- 符合要求的栅格图片会被解码进 DSH 的不可变附件存储，再追加到被 claim 的那条消息上，保留原 `MessageId`。
+- 浏览器侧：回形针挂在 `conversation.input.left`,dock 挂在 `conversation.input.dock`。拖放和粘贴在捕获阶段接管，避免 DSH 原生的 image-only 入口重复处理。待发送媒体用本地 object URL 预览；历史内容走 Host 的 content endpoint。
 
-将生成的 tarball 安装进 Web profile：
+## 部署在服务器上
 
-```powershell
-dsh plugin --profile web add .\dsh-universal-attachments-0.1.1.tgz
-dsh web
-```
-
-发布到 npm 后可以直接安装包名：
-
-```powershell
-dsh plugin --profile web add dsh-universal-attachments
-```
-
-重启 `dsh web` 后生效。当前会话必须有工作区 `cwd`；无工作区会话没有安全的落盘位置。
-
-## 远端服务器
-
-DSH 当前没有内建多用户认证，也不应该裸露在公网。推荐让 DSH 监听服务器回环地址，然后通过 SSH 隧道访问：
+DSH 没有内建多用户认证，别直接暴露到公网。监听回环地址，走 SSH 隧道：
 
 ```sh
-# server
+# 服务器
 dsh web --port 3080
 
-# local machine
+# 本机
 ssh -L 3080:127.0.0.1:3080 user@example-server
 ```
 
-随后在本机打开 `http://127.0.0.1:3080`。若必须使用反向代理，应在代理层增加 HTTPS、身份认证、请求体限制和访问日志；代理需要保留浏览器侧 `Host`，同时保护 `/api` 与插件上传路由，并在日志中脱敏带 capability 的预览 URL。`--trusted-host` 是 Host/Origin 信任配置，不是用户认证。
+然后在本机打开 `http://127.0.0.1:3080`。实在要用反向代理，就在代理层终结 HTTPS、加认证、限制请求体大小、记访问日志：保留浏览器侧的 `Host`,`/api` 和插件路由都要保护，日志里把带 capability 的预览 URL 脱敏。`--trusted-host` 是 Host/Origin 信任配置，不是用户认证。
 
-## 架构
+## 一些值得知道的事
 
-### Host
-
-- `UniversalAttachmentsGateway` 继承 `TypertRemoteService`，Remote 只承担批次、条目、列表、删除和预览票据等 JSON 控制面。
-- `ctx.webServer.register({ kind: 'prefix', ... })` 提供二进制上传和预览路由。
-- 上传采用 4 MiB raw chunk、严格 offset、独占创建、持久化文件身份，以及绑定同一已验证文件句柄的写入与回滚。未完成文件不会进入提示或预览。
-- 草稿清单可跨 DSH 重启恢复；两阶段 claim 只在对应 `user/message` 已提交且已配置的 session durability barrier 成功后，才把附件转入历史态。自定义 profile 若没有 persistence listener，插件会按 live log 确认并警告此时不具备重启持久性。
-- 支持的栅格图片会由 DSH 不可变附件存储解码并提交，再追加到本次真人消息，同时保留原 `MessageId`。
-- 每个 session 在 `<cwd>/.dsh/uploads/` 下使用独立物理命名空间；服务端检查路径穿越、绝对路径、盘符、UNC、NUL、Windows 保留名、大小写冲突、父目录 symlink/junction 与叶文件 hard link。
-- 上传与预览路由使用有数量上限的短期 opaque capability，执行同源校验且不启用 CORS；预览不接受任意服务器路径。
-- 限额为单文件 20 GiB、单 root 50 GiB、单 draft 100 GiB、单 workspace 保留 200 GiB，并限制保留 root、文件、session 数量及最低磁盘余量。
-
-### Browser
-
-- `conversation.input.left` 注册回形针入口。
-- `conversation.input.dock` 注册 64 px 图片 rail、紧凑文件行、进度和错误状态。
-- 捕获阶段接管文件拖放和文件粘贴，避免原生 image-only intake 重复处理。
-- 每个文件顺序分片，多个文件有限并发；网络抖动时通过 `HEAD` 查询 offset 后继续。
-- 待发送媒体使用本地 Object URL 预览；刷新或历史消息通过 Host content endpoint 预览。
-
-## 当前限制
-
-- DSH 0.1.0-rc.6 有原生持久化图片链路，但没有通用文件、文件夹、音频或视频 content block；这些格式仍使用隔离的历史兼容层。
-- 原生历史图片仅支持 PNG、JPEG、WebP、GIF，并受部署侧图片数量、字节数和像素限额约束；被原生链路跳过的图片仍可通过服务器工作区路径和兼容预览访问。
-- 浏览器文件夹选择通常不报告空目录；因此完全空的子目录不一定能被保留。
-- 同一会话多标签页共享服务器端“下一条消息”附件语义；先发送的标签页会消费当时已完成的附件。
-- 上传中的条目不会注入当前消息；请等待进度指示消失后再发送。
-- 文件内容属于不可信用户输入，模型读取后仍可能遇到提示注入或恶意数据。
-- 当前还没有已发送附件的保留期管理界面。需要释放空间时，请先停止 DSH，只删除本插件选定的 session hash 目录及对应的 `.dsh/uploads/.universal-attachments/<session-hash>.json` 元数据。除非确实要重置所有使用者，否则不要删除整个 `.dsh/uploads/`；被删除的历史附件链接会失效。
-- 同一 workspace 只运行一个 DSH 写入进程。上传 capability 和写入锁是进程内状态，因此不支持集群或负载均衡的多进程 DSH 部署。
-- 纯 Node 实现可防正常运行中的静态路径替换，但它不是操作系统用户隔离层；能以同一账户高速竞态修改文件系统命名空间的进程仍属于服务器信任边界。
+- 文件夹上传保留相对层级（File System Access API，兼容 `webkitGetAsEntry` / `webkitdirectory`)，但浏览器一般不报告空目录。
+- 文件按 4 MiB 分片顺序上传，文件之间有限并发；网络抖一下，客户端会 `HEAD` 问当前 offset 接着传。网关回 413 时自动缩小分片重试。
+- 等进度走完再发送——还在传的文件不会挂到这条消息上。
+- 同一会话的多个标签页共享一份"下一条消息"草稿，先发送的标签页消费掉已就绪的文件。
+- 限额：单文件 20 GiB、单 root 50 GiB、单草稿 100 GiB、单工作区保留 200 GiB，另有保留 root/文件/session 数量上限和最低磁盘余量。
+- 上传内容是不可信输入。agent 读文件时仍可能遇到提示注入或恶意数据。
+- 还没有保留期管理界面。要释放空间，先停 DSH，只删本插件的 session hash 目录和对应的 `.dsh/uploads/.universal-attachments/<session-hash>.json`。除非确实要重置所有使用者，别整个删掉 `.dsh/uploads/`——历史附件链接会失效。
+- 一个工作区只跑一个 DSH 写入进程。上传票据和写锁是进程内状态，集群或负载均衡的多进程部署不支持。
+- 纯 Node 实现，能防正常运行中的静态路径替换，但它不是操作系统级的用户隔离层。
 
 ## 开发
 
 ```powershell
-pnpm run check       # TypeScript
-pnpm run test        # path/state/range/browser intake tests
-pnpm run build       # lib/index.js + wrapped lib/client.js
+pnpm run check    # TypeScript
+pnpm run test     # path/state/range/browser intake 测试
+pnpm run build    # lib/index.js + 包装后的 lib/client.js
 ```
 
-关键规则：
+构建依赖的几条规则：
 
-- Host Remote 方法参数名就是 wire 字段名，构建不得压缩改写。
-- Client bundle 必须包装为 `window.__ModuleLoader__.load(...)`。
-- `package.json` 同时声明 `exports["./client"]`、`exports["./typert"]` 和 `dsh.client`。
-- 二进制不得放入 Typert JSON RPC。
+- Host 方法的参数名就是 Typert wire 字段名，任何东西都不能改写它们。
+- client 产物必须保持 `window.__ModuleLoader__.load(...)` 包装。
+- `package.json` 声明了 `exports["./client"]`、`exports["./typert"]` 和 `dsh.client`。
+- 二进制字节不走 Typert JSON RPC。
 
 ## 参考
 
-- DeepSeek Harness 插件基础：<https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/develop/basic/index.md>
-- Bundle 打包与安装：<https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/develop/basic/publish.md>
-- WebServer 子系统：<https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/subsystems/web-server.md>
-- Client Modules：<https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/subsystems/client-modules.md>
+- [插件开发基础](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/develop/basic/index.md) · [打包与安装](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/develop/basic/publish.md)
+- [WebServer 子系统](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/subsystems/web-server.md) · [Client Modules](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/subsystems/client-modules.md)
 - 设计参考：MIT 许可的 `CocoSgt/dsh-attachments`
 
 ## License
