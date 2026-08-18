@@ -11,15 +11,14 @@ import {
   type AttachmentRailItem,
 } from '@deepseek-ai/dsh-client-ui-attachment'
 import {
-  IconArchiveOutline20,
   IconCloseOutline16,
-  IconCodeOutline16,
   IconFolderClose16,
   IconLoadingOutline16,
   IconPaperclipOutline16,
   IconPlayOutline16,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { SessionId } from '@deepseek-ai/dsh-client-runtime/client'
+import { ArchiveGlyph, CodeGlyph, DocGlyph } from './fileicons.js'
 import { fileExtension, fileVisualKind } from './filekind.js'
 import { formatSize } from './intake.js'
 import { rpcText, tr, type Key, type LocaleProps } from './locales.js'
@@ -86,12 +85,14 @@ function FileVisual({ root, store }: { readonly root: RootSummary; readonly stor
   }
   const kind = fileVisualKind(root.name, local?.previewMime)
   const icon = kind === 'archive'
-    ? <IconArchiveOutline20 size={16} />
+    ? <ArchiveGlyph size={16} />
     : kind === 'code'
-      ? <IconCodeOutline16 size={16} />
+      ? <CodeGlyph size={16} />
       : kind === 'audio'
         ? <IconPlayOutline16 size={14} />
-        : <IconPaperclipOutline16 size={16} />
+        : kind === 'pdf' || kind === 'text'
+          ? <DocGlyph size={16} />
+          : <IconPaperclipOutline16 size={16} />
   return (
     <span className={`dua-file-visual dua-file-tile dua-kind-${kind}`} aria-hidden="true">
       {icon}

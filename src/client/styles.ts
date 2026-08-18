@@ -708,8 +708,12 @@ body > [role='presentation']:has(> .dua-preview-modal) > div:first-child {
 `
 
 export function installStyles(): () => void {
-  const existing = document.querySelector('style[data-plugin="dsh-universal-attachments"]')
-  if (existing !== null) return () => undefined
+  // A previous bundle may have left its style tag behind (plugin remounts
+  // without a full page reload); always replace it so this bundle's rules
+  // win instead of being skipped by a stale guard.
+  for (const stale of document.querySelectorAll('style[data-plugin="dsh-universal-attachments"]')) {
+    stale.remove()
+  }
   const style = document.createElement('style')
   style.dataset.plugin = 'dsh-universal-attachments'
   style.textContent = CSS

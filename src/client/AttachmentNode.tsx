@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
-  IconArchiveOutline20,
-  IconCodeOutline16,
   IconFolderClose16,
   IconPaperclipOutline16,
   IconPlayOutline16,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ChatNodeViewProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type { AttachmentHistoryRoot } from '../shared/manifest.js'
+import { ArchiveGlyph, CodeGlyph, DocGlyph } from './fileicons.js'
 import { fileExtension, fileVisualKind } from './filekind.js'
 import { formatSize } from './intake.js'
 import { tr, type LocaleProps } from './locales.js'
@@ -70,12 +69,14 @@ function AttachmentVisual({ root, preview }: {
   }
   const kind = fileVisualKind(root.name, root.mime)
   const icon = kind === 'archive'
-    ? <IconArchiveOutline20 size={15} />
+    ? <ArchiveGlyph size={15} />
     : kind === 'code'
-      ? <IconCodeOutline16 size={15} />
+      ? <CodeGlyph size={15} />
       : kind === 'audio'
         ? <IconPlayOutline16 size={13} />
-        : <IconPaperclipOutline16 size={15} />
+        : kind === 'pdf' || kind === 'text'
+          ? <DocGlyph size={15} />
+          : <IconPaperclipOutline16 size={15} />
   return (
     <span className={`dua-chat-visual dua-chat-file dua-kind-${kind}`} aria-hidden="true">
       {icon}
