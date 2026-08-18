@@ -55,7 +55,7 @@ pnpm pack
 Install the generated tarball into the Web profile:
 
 ```powershell
-dsh plugin --profile web add .\dsh-universal-attachments-0.1.0.tgz
+dsh plugin --profile web add .\dsh-universal-attachments-0.1.1.tgz
 dsh web
 ```
 

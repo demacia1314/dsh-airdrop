@@ -55,7 +55,7 @@ pnpm pack
 将生成的 tarball 安装进 Web profile：
 
 ```powershell
-dsh plugin --profile web add .\dsh-universal-attachments-0.1.0.tgz
+dsh plugin --profile web add .\dsh-universal-attachments-0.1.1.tgz
 dsh web
 ```
 
