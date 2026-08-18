@@ -8,7 +8,6 @@ import {
   type MenuEntry,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { SessionId } from '@deepseek-ai/dsh-client-runtime/client'
-import { DropOverlayHost } from './dropzone.js'
 import { rootsFromFiles, type UploadRoot } from './files.js'
 import { tr, type LocaleProps } from './locales.js'
 import type { InputActionsFace, UploadStore } from './store.js'
@@ -111,7 +110,6 @@ export function AttachButton({ sessionId, inputActions, store, intake, t }: Atta
       />
       <input ref={fileInput} hidden type="file" multiple onChange={handleFiles} />
       <input ref={folderInput} hidden type="file" multiple onChange={handleFolder} />
-      <DropOverlayHost />
     </div>
   )
 }

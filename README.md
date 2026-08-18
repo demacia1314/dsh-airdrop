@@ -4,13 +4,13 @@ The published DSH/npm package name remains `dsh-universal-attachments` for compa
 
 English | [简体中文](README.zh-CN.md)
 
-A remote-safe attachment plugin for DeepSeek Harness (dsh). Drop files or folders directly into the active conversation composer; it renders image thumbnails or compact file rows, then uploads images, audio, video, and arbitrary byte formats from the browser into the DSH server's session workspace.
+A remote-safe attachment plugin for DeepSeek Harness (dsh). Drop files or folders anywhere in the DSH window; it renders image thumbnails or compact file rows, then uploads images, audio, video, and arbitrary byte formats from the browser into the DSH server's session workspace.
 
 The project targets the public APIs in **DSH 0.1.0-rc.6, released August 13, 2026**. DSH is still a Developer Preview, so test upgrades in a separate profile first.
 
 ## Features
 
-- Drag files or complete directories into the DSH window.
+- Drag files or complete directories anywhere into the DSH window.
 - Separate file and folder pickers, with no MIME `accept` filter.
 - Relative directory structure through File System Access APIs, `webkitGetAsEntry`, and `webkitdirectory` fallbacks.
 - Same-origin HTTP chunk uploads instead of Base64 JSON RPC, removing the practical 32 MB RPC ceiling.

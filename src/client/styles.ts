@@ -512,7 +512,7 @@ body > [role='dialog'][aria-modal='true']:has(> img) > button {
 }
 body > [role='dialog'][aria-modal='true']:has(> img) > button:hover { background: rgba(45, 52, 65, .92); }
 
-body > [role='status']:has(svg[width='115'][height='84']) {
+.dua-drop-overlay {
   position: fixed;
   inset: 0;
   z-index: 12500;
@@ -522,29 +522,42 @@ body > [role='status']:has(svg[width='115'][height='84']) {
   background: color-mix(in srgb, var(--dsw-alias-bg-layer-1, #fff) 82%, transparent);
   backdrop-filter: blur(4px);
   color: var(--dsw-alias-label-primary, #18202b);
+  font-family: var(--ds-font-family, ui-sans-serif, system-ui, sans-serif);
   pointer-events: none;
   box-sizing: border-box;
 }
-body > [role='status']:has(svg[width='115'][height='84'])::before {
+.dua-drop-overlay::before {
   content: '';
   position: absolute;
   inset: 16px;
   border: 1.5px dashed color-mix(in srgb, var(--dsw-alias-state-business-primary, #2d6fe8) 76%, transparent);
   border-radius: 8px;
 }
-body > [role='status']:has(svg[width='115'][height='84']) > div {
+.dua-drop-card {
   position: relative;
   display: grid;
   justify-items: center;
-  gap: 6px;
+  gap: 8px;
   text-align: center;
 }
-body > [role='status']:has(svg[width='115'][height='84']) > div > div:nth-child(2) {
+.dua-drop-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 4px;
+  border-radius: 16px;
+  background: var(--dsw-alias-state-business-primary, #2d6fe8);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(45, 111, 232, .35);
+}
+.dua-drop-icon svg { width: 28px; height: 28px; }
+.dua-drop-card strong {
   font-size: 17px;
   line-height: 24px;
   font-weight: 650;
 }
-body > [role='status']:has(svg[width='115'][height='84']) > div > div:nth-child(3) {
+.dua-drop-card small {
   max-width: 440px;
   color: var(--dsw-alias-label-tertiary, #6e7785);
   font-size: 12px;
@@ -696,7 +709,7 @@ body > [role='presentation']:has(> .dua-preview-modal) > div:first-child {
     grid-template-columns: minmax(0, 1fr);
     width: min(300px, calc(100% - 24px));
   }
-  body > [role='status']:has(svg[width='115'][height='84']) > div > div:nth-child(3) { display: none; }
+  .dua-drop-card small { display: none; }
   body > [role='presentation']:has(> .dua-preview-modal) { padding: 8px; }
   .dua-preview-modal { width: 100%; max-height: 92vh; }
   .dua-preview-pdf { height: 72vh; }

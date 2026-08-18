@@ -1,5 +1,3 @@
-import { useSyncExternalStore, type ReactNode } from 'react'
-import { DropOverlay } from '@deepseek-ai/dsh-client-ui-attachment'
 import { rootsFromDrop, rootsFromFiles, type UploadRoot } from './files.js'
 import { tr } from './locales.js'
 import type { ComposerCapture, InputActionsFace, UploadStore } from './store.js'
@@ -14,29 +12,35 @@ export interface DropzoneEnv {
   ) => Promise<unknown>
 }
 
-let overlayVisible = false
-const overlayListeners = new Set<() => void>()
+const OVERLAY_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"/><path d="m6 10 6-6 6 6"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>'
+
+let overlayElement: HTMLDivElement | undefined
 
 function setOverlayVisible(visible: boolean): void {
-  if (overlayVisible === visible) return
-  overlayVisible = visible
-  for (const listener of overlayListeners) listener()
-}
-
-function subscribeOverlay(listener: () => void): () => void {
-  overlayListeners.add(listener)
-  return () => { overlayListeners.delete(listener) }
-}
-
-export function DropOverlayHost(): ReactNode {
-  const visible = useSyncExternalStore(subscribeOverlay, () => overlayVisible, () => false)
-  if (!visible) return null
-  return (
-    <DropOverlay
-      disabled={false}
-      labels={{ title: tr('drop.title'), desc: tr('drop.sub') }}
-    />
-  )
+  if (visible) {
+    if (overlayElement !== undefined) return
+    const element = document.createElement('div')
+    element.className = 'dua-drop-overlay'
+    element.dataset.plugin = 'dsh-universal-attachments'
+    element.setAttribute('role', 'status')
+    const card = document.createElement('div')
+    card.className = 'dua-drop-card'
+    const icon = document.createElement('span')
+    icon.className = 'dua-drop-icon'
+    icon.setAttribute('aria-hidden', 'true')
+    icon.innerHTML = OVERLAY_ICON
+    const title = document.createElement('strong')
+    title.textContent = tr('drop.title')
+    const sub = document.createElement('small')
+    sub.textContent = tr('drop.sub')
+    card.append(icon, title, sub)
+    element.append(card)
+    document.body.append(element)
+    overlayElement = element
+    return
+  }
+  overlayElement?.remove()
+  overlayElement = undefined
 }
 
 function hasFiles(transfer: DataTransfer | null): boolean {
@@ -61,12 +65,7 @@ export function installDropzone(env: DropzoneEnv): () => void {
   }
 
   const dragEnter = (event: DragEvent): void => {
-    const current = env.store.current()
-    if (
-      !hasFiles(event.dataTransfer)
-      || current === undefined
-      || !targetsComposer(event, current)
-    ) {
+    if (!hasFiles(event.dataTransfer) || env.store.current() === undefined) {
       reset()
       return
     }
@@ -75,12 +74,7 @@ export function installDropzone(env: DropzoneEnv): () => void {
     setOverlayVisible(true)
   }
   const dragOver = (event: DragEvent): void => {
-    const current = env.store.current()
-    if (
-      !hasFiles(event.dataTransfer)
-      || current === undefined
-      || !targetsComposer(event, current)
-    ) {
+    if (!hasFiles(event.dataTransfer) || env.store.current() === undefined) {
       reset()
       return
     }
@@ -89,12 +83,7 @@ export function installDropzone(env: DropzoneEnv): () => void {
     if (event.dataTransfer !== null) event.dataTransfer.dropEffect = 'copy'
   }
   const dragLeave = (event: DragEvent): void => {
-    const current = env.store.current()
-    if (
-      !hasFiles(event.dataTransfer)
-      || current === undefined
-      || !targetsComposer(event, current)
-    ) {
+    if (!hasFiles(event.dataTransfer) || env.store.current() === undefined) {
       reset()
       return
     }
@@ -109,10 +98,10 @@ export function installDropzone(env: DropzoneEnv): () => void {
   const drop = (event: DragEvent): void => {
     const current = env.store.current()
     const transfer = event.dataTransfer
-    const withinComposer = current !== undefined && targetsComposer(event, current)
     reset()
-    if (current === undefined || transfer === null || !hasFiles(transfer) || !withinComposer) return
-    // Own file drops before DSH's document-level native image handler sees them.
+    if (current === undefined || transfer === null || !hasFiles(transfer)) return
+    // Own file drops anywhere in the window before DSH's document-level
+    // native image handler or the browser's default navigation sees them.
     claimDrag(event)
     const preparationId = env.store.beginPreparation(current.sessionId)
     const roots = rootsFromDrop(transfer)
