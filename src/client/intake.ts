@@ -8,6 +8,12 @@ import type { PreparedRoot, UniversalAttachmentsCalls } from './types.js'
 
 const MAX_CONCURRENT_FILES = 3
 const MAX_ATTEMPTS = 3
+const MIN_CHUNK_SIZE = 256 * 1024
+
+/** Proxy/gateway 413 pages carry no JSON payload, so they surface as this shape. */
+function isGateway413(error: unknown): boolean {
+  return error instanceof Error && /\(413\)\s*$/u.test(error.message)
+}
 
 export interface IntakeEnv {
   readonly ctx: ClientContext
@@ -130,10 +136,12 @@ async function uploadOne(
   }
   reportProgress()
 
+  let chunkSize = begin.value.chunkSize
   while (offset < file.size) {
-    const end = Math.min(file.size, offset + begin.value.chunkSize)
+    const end = Math.min(file.size, offset + chunkSize)
     let sent = false
     let lastError: unknown
+    let shrink = false
     for (let attempt = 0; attempt < MAX_ATTEMPTS && !sent; attempt += 1) {
       try {
         const result = await sendChunk(begin.value.uploadUrl, begin.value.ticket, offset, file.slice(offset, end))
@@ -145,6 +153,13 @@ async function uploadOne(
         sent = true
       } catch (error: unknown) {
         lastError = error
+        // A proxy in front of DSH may refuse large bodies; halve the chunk
+        // and retry below instead of burning the ordinary attempts.
+        if (isGateway413(error) && chunkSize > MIN_CHUNK_SIZE) {
+          chunkSize = Math.max(MIN_CHUNK_SIZE, Math.floor(chunkSize / 2))
+          shrink = true
+          break
+        }
         if (attempt + 1 >= MAX_ATTEMPTS) break
         await delay(300 * 2 ** attempt)
         offset = Math.min(await queryOffset(begin.value.uploadUrl, begin.value.ticket), file.size)
@@ -153,6 +168,7 @@ async function uploadOne(
         if (offset >= end) sent = true
       }
     }
+    if (shrink) continue
     if (!sent) throw lastError
   }
 }
