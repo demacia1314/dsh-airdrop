@@ -1,6 +1,6 @@
 # dsh-airdrop
 
-给 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) Web 界面用的附件插件。把文件——或者整个文件夹——拖到 DSH 窗口的任意位置，它就会上传进当前会话的工作区，agent 直接就能读。图片、视频、音频、PDF、压缩包都行：浏览器能选中的，插件就能传。
+给 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) Web 界面用的附件插件，体验对标 Codex app：把任意文件——或整个文件夹——拖到 DSH 窗口的任意位置，字节直接上传进服务器的会话工作区，agent 直接就能读。本机、远程服务器、SSH 隧道，体验完全一样。图片、视频、音频、PDF、压缩包：浏览器能选中的，插件就能传。
 
 [English](README.md) | 简体中文
 

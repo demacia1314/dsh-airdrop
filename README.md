@@ -1,6 +1,6 @@
 # dsh-airdrop
 
-Attachments for the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) web UI. Drag a file — or a whole folder — onto any part of the DSH window and it uploads into the session workspace, ready for the agent to read. Images, video, audio, PDFs, archives: if the browser can pick it up, the plugin ships it.
+Attachments for the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) web UI, the way the Codex app does it: drag any file — or a whole folder — onto any part of the DSH window and the bytes upload into the session workspace on the server. Localhost, a remote box, an SSH tunnel — same experience everywhere. Images, video, audio, PDFs, archives: if the browser can pick it up, the plugin ships it.
 
 English | [简体中文](README.zh-CN.md)
 
