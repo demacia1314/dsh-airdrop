@@ -1,117 +1,88 @@
-# dsh-airdrop
+<div align="center">
 
-Attachments for the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) web UI, the way the Codex app does it: drag any file — or a whole folder — onto any part of the DSH window and the bytes upload into the session workspace on the server. Localhost, a remote box, an SSH tunnel — same experience everywhere. Images, video, audio, PDFs, archives: if the browser can pick it up, the plugin ships it.
+# 📮 dsh-airdrop
 
-English | [简体中文](README.zh-CN.md)
+### 把文件拖进 DSH,AI 就能读
 
-Built against **DSH 0.1.0-rc.6** (August 13, 2026). DSH is still a Developer Preview, so try upgrades in a throwaway profile first.
+**⭐ 支持拖拽上传&ensp;·&ensp;⭐ 支持远程上传&ensp;·&ensp;⭐ 任意格式附件**
 
-> Naming: the repo is `dsh-airdrop`, but the installed package stays `dsh-universal-attachments`. Renaming the package would break existing installs, so it stays.
+部署在服务器上的 DSH,也能像本地一样,拖了就发
 
-## Using it
+[English](README.en.md)&ensp;·&ensp;[AI 版本](README.ai.md)&ensp;·&ensp;[更新日志](CHANGELOG.md)
 
-- Drop files or folders anywhere in the window. A dock above the composer shows one card per file with a type icon, size, and progress.
-- Cards preview right in the browser — images, seekable video, audio, text — before and after sending.
-- Hit the normal send button. Finished uploads ride along with your message, and the agent gets workspace-relative paths it can open with its filesystem tools or `read_image`.
-- Images that fit DSH's own limits (PNG, JPEG, WebP, GIF) go through the native image pipeline and land in the built-in gallery and lightbox. Everything else shows up as a compact card in the conversation.
-- Nothing is rejected by file type. "Any file" means we don't filter bytes — not that the model understands every format. The plugin never executes, extracts, or transcodes uploads on its own.
+[![listed on awesome dsh plugin](https://awesome-dsh-plugin.com/badge.svg)](https://awesome-dsh-plugin.com)
+![DSH](https://img.shields.io/badge/DSH-0.1.0--rc.6-4c8dff)
+![License](https://img.shields.io/badge/license-MIT-3fb950)
 
-## Install
+<img src="https://raw.githubusercontent.com/demacia1314/dsh-airdrop/main/assets/in-chat.png" alt="附件随消息发出,AI 直接读取文件内容" width="880">
 
-Build from source:
+</div>
+
+## ✨ 亮点
+
+- 🖱️ **拖进来就行**——文件、整个文件夹,拖到窗口任意位置,松手即传
+- 🌐 **远程也好用**——DSH 装在服务器上?通过 SSH 隧道访问,传文件和本地一模一样
+- 📎 **不挑格式**——图片、视频、音频、PDF、压缩包、代码文件……任何文件都能传
+- 👀 **先看再发**——发送前在浏览器里直接预览:图片放大看,视频拖进度条,音频直接播
+- 💬 **原生体验**——附件卡片与聊天气泡对齐,点平常见的发送按钮即可,AI 自动读取文件内容
+- 🔒 **各管各的**——文件只落在当前会话的工作区,会话之间互相隔离
+
+## 🖼️ 看一看
+
+| 拖进来 | 发出去 | 随时预览 |
+| :---: | :---: | :---: |
+| <img src="https://raw.githubusercontent.com/demacia1314/dsh-airdrop/main/assets/drop-in.png" alt="拖入文件后显示附件卡片"> | <img src="https://raw.githubusercontent.com/demacia1314/dsh-airdrop/main/assets/in-chat.png" alt="附件随消息发出,AI 读取内容"> | <img src="https://raw.githubusercontent.com/demacia1314/dsh-airdrop/main/assets/preview-modal.png" alt="浏览器内预览附件"> |
+| 拖到窗口任意位置,卡片立刻出现 | 附件跟着消息走,AI 直接读内容 | 点开就能预览,还能下载 |
+
+## 🚀 三分钟上手
 
 ```powershell
 pnpm install
-pnpm run check
-pnpm run test
 pnpm run build
 pnpm pack
 dsh plugin --profile web add .\dsh-universal-attachments-0.1.1.tgz
 dsh web
 ```
 
-Once it is on npm you can skip the build:
+发布到 npm 之后,一行就够:
 
 ```powershell
 dsh plugin --profile web add dsh-universal-attachments
 ```
 
-Restart `dsh web` after installing. The session needs a workspace `cwd` — without one there is no safe place to put your files.
+> 安装后重启 `dsh web` 生效;会话需要有工作区目录。另外:仓库名叫 `dsh-airdrop`,安装包名保持 `dsh-universal-attachments` 不变——改名会破坏已有安装。
 
-## How it stays remote-safe
+## ❓ 可能会问
 
-The browser and the DSH server are usually not the same machine, so handing the server a local file path doesn't work. Instead:
+**大文件能传吗?**
+能。文件分块上传,网络断了自动续传;网关嫌块太大(返回 413)时会自动调小重试。单文件上限 20 GiB。
 
-```text
-Browser File/Directory
-        │ raw chunks
-        ▼
-DSH Host WebServer
-        │ verified file-handle writes
-        ▼
-<session cwd>/.dsh/uploads/<session-hash>/...
-        │ relative path note
-        ▼
-Agent filesystem tools
-```
+**支持哪些格式?**
+全部。不按格式拒绝任何文件。"任意格式"指不拦截字节内容,不代表 AI 一定能读懂每种格式;插件也不会自己去执行或解压你的文件。
 
-The browser sends bytes, chunked over plain same-origin HTTP — no Base64 RPC, so no 32 MB ceiling. The host resolves the workspace itself from the `sessionId`; the client never picks a server-side directory. Each session gets an isolated namespace under `.dsh/uploads/`, and the server checks traversal tricks, absolute and drive paths, UNC paths, NULs, reserved Windows names, case-fold collisions, parent symlinks/junctions, and leaf hard links. Upload and preview routes require short-lived capability tickets, enforce same-origin, and don't enable CORS.
+**空文件夹会一起传吗?**
+浏览器一般不报告空目录,所以完全空的文件夹可能不会被保留。
 
-Drafts survive a restart: pending uploads move into history only after the matching `user/message` is committed and the session durability barrier reports success.
+**开多个标签页会怎样?**
+同一会话的多个标签页共享一份待发送附件,谁先点发送,谁就带走当时已传完的文件。
 
-## Under the hood
+**想清理空间怎么办?**
+先停掉 DSH,然后只删除该插件对应的会话目录和它的元数据文件(`.dsh/uploads/.universal-attachments/<会话标识>.json`)。不要整个删掉 `.dsh/uploads/`,历史附件链接会失效。
 
-- Host: a `TypertRemoteService` owns the JSON control plane (batches, entries, listing, removal, preview tickets); a `ctx.webServer` prefix route streams the raw bytes. Writes hold one verified file handle with rollback, and half-finished files never leak into prompts or previews.
-- Qualifying raster images are decoded into DSH's immutable attachment store and appended to the claimed message, keeping its stable `MessageId`.
-- Client: the paperclip lives in `conversation.input.left`, the dock in `conversation.input.dock`. Drop and paste are intercepted in the capture phase so DSH's native image-only intake doesn't double-handle them. Pending media previews from local object URLs; historical content streams from the host endpoint.
+## 🛡️ 要放到服务器上?
 
-## Running DSH on a server
-
-DSH has no built-in multi-user auth — don't expose it to the public internet. Bind to loopback and use an SSH tunnel:
+DSH 没有内建的多用户认证,别直接暴露到公网。让它只监听服务器本机,用 SSH 隧道访问:
 
 ```sh
-# server
+# 服务器上
 dsh web --port 3080
 
-# your machine
-ssh -L 3080:127.0.0.1:3080 user@example-server
+# 你的电脑上
+ssh -L 3080:127.0.0.1:3080 user@你的服务器
 ```
 
-Then open `http://127.0.0.1:3080`. If a reverse proxy is unavoidable, terminate HTTPS there, add authentication, cap request sizes, and keep access logs: preserve the browser-facing `Host`, protect the plugin routes along with `/api`, and scrub capability-bearing preview URLs from the logs. `--trusted-host` is Host/Origin trust configuration, not user authentication.
-
-## Good to know
-
-- Folder uploads keep their relative structure (File System Access API, with `webkitGetAsEntry` / `webkitdirectory` fallbacks), but browsers generally don't report empty directories.
-- Files upload sequentially in 4 MiB chunks with bounded cross-file concurrency; after a network hiccup the client asks for the current offset and resumes. If a gateway answers 413, the chunk size backs off and retries on its own.
-- Wait for the progress indicator to finish before sending — files still in flight are not attached to that message.
-- Tabs on the same session share one "next message" draft; whichever tab sends first consumes the ready files.
-- Limits: 20 GiB per file, 50 GiB per folder root, 100 GiB per draft, 200 GiB retained per workspace, plus caps on retained roots/files/sessions and a free-disk reserve.
-- Uploaded content is untrusted input. The agent may still run into prompt injection or malicious data when it reads your files.
-- No retention UI yet. To reclaim space, stop DSH and delete only this plugin's session-hash directory plus the matching `.dsh/uploads/.universal-attachments/<session-hash>.json`. Don't wipe the whole `.dsh/uploads/` tree unless every producer using it should be reset — dead history links stop working.
-- One DSH writer per workspace. Upload tickets and write locks are process-local, so clustered or load-balanced multi-process deployments are out.
-- This is a pure Node implementation. It defends normal operation and static path substitution, but it is not an OS-user sandbox.
-
-## Development
-
-```powershell
-pnpm run check    # TypeScript
-pnpm run test     # path/state/range/browser intake tests
-pnpm run build    # lib/index.js + wrapped lib/client.js
-```
-
-Rules the build relies on:
-
-- Host method parameter names are Typert wire names — nothing may mangle them.
-- The client artifact must stay wrapped in `window.__ModuleLoader__.load(...)`.
-- `package.json` declares `exports["./client"]`, `exports["./typert"]`, and `dsh.client`.
-- Binary bytes never travel through Typert JSON RPC.
-
-## References
-
-- [Plugin basics](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/develop/basic/index.md) · [packaging and install](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/develop/basic/publish.md)
-- [WebServer subsystem](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/subsystems/web-server.md) · [client modules](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/subsystems/client-modules.md)
-- Design reference: the MIT-licensed `CocoSgt/dsh-attachments`
+然后在本机浏览器打开 `http://127.0.0.1:3080` 即可。
 
 ## License
 
-MIT
+[MIT](LICENSE)
