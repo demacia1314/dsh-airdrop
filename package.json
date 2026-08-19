@@ -1,7 +1,7 @@
 {
   "name": "dsh-universal-attachments",
   "version": "0.1.1",
-  "description": "Remote-safe files, folders, images, video, and arbitrary attachments for DeepSeek Harness",
+  "description": "⭐ 支持拖拽上传文件/文件夹到 DSH 窗口任意位置；支持远程上传，字节直传服务器会话工作区——部署在服务器上的 DSH 也能像本地一样拖了就发。",
   "repository": {
     "type": "git",
     "url": "https://github.com/demacia1314/dsh-airdrop.git"
