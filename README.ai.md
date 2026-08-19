@@ -29,14 +29,12 @@ Adds full attachment support to the DSH web UI:
 ## Install
 
 ```powershell
-pnpm install
-pnpm run build
-pnpm pack
-dsh plugin --profile web add .\dsh-universal-attachments-0.1.1.tgz
+dsh plugin --profile web add dsh-universal-attachments
 dsh web   # restart required
 ```
 
-Post-npm-publish equivalent: `dsh plugin --profile web add dsh-universal-attachments`.
+From source instead: `pnpm install && pnpm run build && pnpm pack`, then
+`dsh plugin --profile web add .\dsh-universal-attachments-0.1.1.tgz`.
 
 Prerequisites: DSH web profile; the session must have a workspace `cwd`.
 

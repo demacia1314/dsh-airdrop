@@ -37,20 +37,23 @@
 ## 🚀 三分钟上手
 
 ```powershell
+dsh plugin --profile web add dsh-universal-attachments
+dsh web
+```
+
+> 重启 `dsh web` 生效;会话需要有工作区目录。另外:仓库名叫 `dsh-airdrop`,安装包名保持 `dsh-universal-attachments` 不变——改名会破坏已有安装。
+
+<details>
+<summary>想从源码构建?</summary>
+
+```powershell
 pnpm install
 pnpm run build
 pnpm pack
 dsh plugin --profile web add .\dsh-universal-attachments-0.1.1.tgz
-dsh web
 ```
 
-发布到 npm 之后,一行就够:
-
-```powershell
-dsh plugin --profile web add dsh-universal-attachments
-```
-
-> 安装后重启 `dsh web` 生效;会话需要有工作区目录。另外:仓库名叫 `dsh-airdrop`,安装包名保持 `dsh-universal-attachments` 不变——改名会破坏已有安装。
+</details>
 
 ## ❓ 可能会问
 

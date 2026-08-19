@@ -37,20 +37,23 @@ Even when DSH runs on a remote server, dropping a file works exactly like it doe
 ## 🚀 Up and running in three minutes
 
 ```powershell
+dsh plugin --profile web add dsh-universal-attachments
+dsh web
+```
+
+> Restart `dsh web` after installing, and make sure the session has a workspace directory. One naming note: the repo is `dsh-airdrop`, but the package stays `dsh-universal-attachments` — renaming it would break existing installs.
+
+<details>
+<summary>Prefer building from source?</summary>
+
+```powershell
 pnpm install
 pnpm run build
 pnpm pack
 dsh plugin --profile web add .\dsh-universal-attachments-0.1.1.tgz
-dsh web
 ```
 
-Once it's on npm, one line is enough:
-
-```powershell
-dsh plugin --profile web add dsh-universal-attachments
-```
-
-> Restart `dsh web` after installing, and make sure the session has a workspace directory. One naming note: the repo is `dsh-airdrop`, but the package stays `dsh-universal-attachments` — renaming it would break existing installs.
+</details>
 
 ## ❓ You might ask
 
