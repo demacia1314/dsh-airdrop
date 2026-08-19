@@ -12,7 +12,7 @@ Human documentation: [中文](README.md) · [English](README.en.md).
 - Category: DSH web UI plugin (attachments / file upload)
 - License: MIT
 - Target runtime: DeepSeek Harness (DSH) **0.1.0-rc.6**, web profile
-- Awesome list entry: https://github.com/awesome-dsh-plugin/awesome-dsh-plugin (`ui` category)
+- Awesome list entry: https://awesome-dsh-plugin.com/p/demacia1314/dsh-airdrop/ (`ui` category)
 
 ## What it does
 
