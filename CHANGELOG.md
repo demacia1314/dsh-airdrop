@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.2 — 2026-08-26
+
+- Now builds and runs against DSH `0.1.1-rc.2` **and** keeps running on `0.1.0-rc.6` through `0.1.1-rc.1` (peer ranges widened to cover both rc lines; dev dependencies pinned to `0.1.1-rc.2`).
+- The platform internalized its attachment UI atoms in `0.1.1-rc.2` (`AttachmentRail`, `ImageLightbox` are no longer exported from `@deepseek-ai/dsh-client-ui-attachment`). Both components are now vendored in-repo under `src/client/platform/` from the MIT-licensed DeepSeek Harness source (byte-identical between rc.6 and rc.2 — see NOTICE). The lightbox also gains its upstream CSS (the rc.6 npm build shipped the atom without its stylesheet).
+- Server side is unchanged: the host already compiles against the rc.2 `ctx.attachments` durable image store and the typert host face; no RPC method or wire-parameter changes.
+- `pnpm-lock.yaml` regenerated against the rc.2 dependency line (the rc.6-era lockfile cannot be incrementally reconciled across the rc bump).
+
 ## 0.1.1 — 2026-08-18
 
 The whole front end got a pass:

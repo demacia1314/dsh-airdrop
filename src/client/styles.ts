@@ -189,6 +189,51 @@ body > [role='menu']:has([data-dua-attach-choice]) [role='menuitem'] > span:last
 .dua-native-image-rail > div > button:first-child { left: 3px; }
 .dua-native-image-rail > div > button:last-child { right: 3px; }
 
+/* Vendored from deepseek-ai/deepseek-harness (MIT), ImageLightbox.module.css
+   @ aa6c361a9 (dsh 0.1.1-rc.2); class names renamed to the dua- namespace.
+   The rc.6 npm build shipped the lightbox atom without its CSS payload. */
+.dua-lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 40px;
+}
+/* Same mask recipe as the Modal primitive and the settings dialog. A separate
+   layer, not a background on the backdrop: backdrop-filter there would blur
+   the previewed image and the close control along with the page. */
+.dua-lightbox-mask {
+  position: absolute;
+  inset: 0;
+  background: var(--dsw-alias-bg-mask-1);
+  backdrop-filter: var(--dsw-mask-blur);
+}
+.dua-lightbox-image {
+  position: relative;
+  max-width: min(100%, 1600px);
+  max-height: calc(100vh - 80px);
+  object-fit: contain;
+  border-radius: 12px;
+  background: var(--dsw-specific-input-major);
+  box-shadow: var(--dsw-shadow-lv3);
+}
+.dua-lightbox-close {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--dsw-alias-border-l2-darkmode-thin);
+  border-radius: 999px;
+  background: var(--dsw-specific-input-major);
+  color: var(--dsw-alias-label-primary);
+  cursor: pointer;
+}
+
 .dua-file-list {
   display: flex;
   gap: 6px;

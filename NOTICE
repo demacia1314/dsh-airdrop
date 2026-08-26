@@ -2,3 +2,20 @@ This project was designed with reference to the MIT-licensed dsh-attachments
 project by CocoSgt. It uses the same public DeepSeek Harness extension points,
 but implements a separate streaming upload, persistence, directory, and remote
 preview architecture.
+
+Vendored components (MIT License, Copyright (c) DeepSeek):
+
+- src/client/platform/attachment-rail.tsx — vendored from
+  deepseek-ai/deepseek-harness, packages/client/ui-attachment/src/AttachmentRail.tsx,
+  commit aa6c361a9 (release dsh 0.1.1-rc.2). Changes: clsx replaced with a
+  local helper; CSS-module import dropped (styled structurally by this
+  plugin's styles.ts).
+- src/client/platform/image-lightbox.tsx and the .dua-lightbox-* rules in
+  src/client/styles.ts — vendored from the same repository's
+  ImageLightbox.tsx / ImageLightbox.module.css, same commit. Changes: CSS
+  module class names renamed to the plugin's dua- namespace.
+
+Upstream source: https://github.com/deepseek-ai/deepseek-harness
+(0.1.0-rc.6 and 0.1.1-rc.2 shipped byte-identical files; the rc.2 release
+internalized these atoms behind its slot-registered plugin, which prompted
+this vendoring so the plugin works on both rc lines).

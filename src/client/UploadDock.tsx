@@ -9,7 +9,7 @@ import {
 import {
   AttachmentRail,
   type AttachmentRailItem,
-} from '@deepseek-ai/dsh-client-ui-attachment'
+} from './platform/attachment-rail.js'
 import {
   IconCloseOutline16,
   IconFolderClose16,

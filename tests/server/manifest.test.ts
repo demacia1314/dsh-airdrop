@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { TYPERT, TYPERT_MANIFEST } from '../../src/index.js'
 
 describe('hand-written Typert host manifest', () => {
-  it('exports the rc.6 host face and exact RPC method names', () => {
+  it('exports the host face and exact RPC method names', () => {
     expect(TYPERT).toBe(TYPERT_MANIFEST)
     expect(TYPERT_MANIFEST).toMatchObject({
       package: 'dsh-universal-attachments',

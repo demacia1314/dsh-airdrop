@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { ImageLightbox } from '@deepseek-ai/dsh-client-ui-attachment'
+import { ImageLightbox } from './platform/image-lightbox.js'
 import {
   IconDownloadOutline16,
   Modal,
