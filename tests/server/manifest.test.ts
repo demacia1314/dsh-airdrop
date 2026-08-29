@@ -13,8 +13,10 @@ describe('hand-written Typert host manifest', () => {
       'beginFile',
       'listDraft',
       'listRoot',
+      'listStoredRoot',
       'removeRoot',
       'clearDraft',
+      'submitDraft',
       'issuePreview',
     ])
   })
