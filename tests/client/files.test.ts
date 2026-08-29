@@ -1,9 +1,13 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { rootsFromDrop, rootsFromFiles } from '../../src/client/files.js'
 
 function file(name: string, contents = 'x', type = 'application/octet-stream'): File {
   return new File([contents], name, { type, lastModified: 1 })
 }
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
 
 describe('rootsFromFiles', () => {
   it('treats ordinary selections as independent file roots', () => {
@@ -27,7 +31,8 @@ describe('rootsFromFiles', () => {
 })
 
 describe('rootsFromDrop', () => {
-  it('captures file-system handles before awaiting and walks directories', async () => {
+  it('captures file-system handles before awaiting and walks directories in a secure context', async () => {
+    vi.stubGlobal('isSecureContext', true)
     let resolveHandle: ((value: unknown) => void) | undefined
     let called = false
     const handlePromise = new Promise(resolve => { resolveHandle = resolve })
@@ -64,5 +69,36 @@ describe('rootsFromDrop', () => {
     expect(roots).toHaveLength(1)
     expect(roots[0]?.name).toBe('project')
     expect(roots[0]?.files.map(item => item.relativePath)).toEqual(['README.md', 'src/index.ts'])
+  })
+
+  it('skips getAsFileSystemHandle in a non-secure context and falls back to webkitGetAsEntry', async () => {
+    vi.stubGlobal('isSecureContext', false)
+    let handleCalled = false
+    const transfer = {
+      items: [{
+        kind: 'file',
+        getAsFileSystemHandle() {
+          handleCalled = true
+          throw new Error('getAsFileSystemHandle must not be called outside a secure context')
+        },
+        webkitGetAsEntry() {
+          return {
+            isFile: true,
+            isDirectory: false,
+            name: 'a.txt',
+            file: (success: (f: File) => void) => success(file('a.txt', 'abc')),
+          }
+        },
+      }],
+      files: [],
+      types: ['Files'],
+    } as unknown as DataTransfer
+
+    const roots = await rootsFromDrop(transfer)
+    expect(handleCalled).toBe(false)
+    expect(roots).toHaveLength(1)
+    expect(roots[0]?.name).toBe('a.txt')
+    expect(roots[0]?.kind).toBe('file')
+    expect(roots[0]?.files.map(item => item.relativePath)).toEqual([''])
   })
 })
