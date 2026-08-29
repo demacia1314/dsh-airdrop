@@ -166,10 +166,16 @@ export async function rootsFromDrop(transfer: DataTransfer): Promise<readonly Up
   const items = [...transfer.items]
     .filter(item => item.kind === 'file')
     .map(item => item as unknown as DataTransferItemWithDirectories)
-  const handles = items.map(item => {
-    try { return item.getAsFileSystemHandle?.() }
-    catch { return undefined }
-  })
+  // File System Access API is only available in secure contexts. Calling
+  // getAsFileSystemHandle() on a non-secure origin (e.g. http://<lan-ip>) makes
+  // Chromium kill the renderer with RESULT_CODE_KILLED_BAD_MESSAGE (crbug 1219885).
+  // Guard it and fall back to the legacy entry APIs below.
+  const handles = globalThis.isSecureContext
+    ? items.map(item => {
+        try { return item.getAsFileSystemHandle?.() }
+        catch { return undefined }
+      })
+    : []
   const entries = items.map(item => {
     try { return item.webkitGetAsEntry?.() ?? item.getAsEntry?.() ?? null }
     catch { return null }
