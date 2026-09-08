@@ -18,7 +18,7 @@ const expectedMethods = [
 const hostUrl = new URL('../lib/index.js', import.meta.url)
 hostUrl.searchParams.set('smoke', String(Date.now()))
 const host = await import(hostUrl.href)
-if (JSON.stringify(host.default.inject) !== JSON.stringify(['webServer', 'sessions', 'attachments', 'apiProxy', 'agents'])) {
+if (JSON.stringify(host.default.inject) !== JSON.stringify(['webServer', 'sessions', 'attachments', 'sessionController', 'agents'])) {
   throw new Error('Built Gateway inject metadata is invalid')
 }
 
@@ -41,12 +41,10 @@ const stopAttachments = ctx.provide('attachments', {
   saveImage: async () => { throw new Error('artifact smoke does not save images') },
   readImage: async () => { throw new Error('artifact smoke does not read images') },
 })
-const stopApiProxy = ctx.provide('apiProxy', {
-  sessions: {
-    prompt: async request => ({
-      rpcId: request.rpcId,
-      result: { ok: true, value: { accepted: true } },
-    }),
+const stopSessionController = ctx.provide('sessionController', {
+  prompt: async request => {
+    if (typeof request.requestId !== 'string') throw new Error('prompt request missing requestId')
+    return { accepted: true }
   },
 })
 const stopAgents = ctx.provide('agents', {
@@ -56,7 +54,7 @@ const stopAgents = ctx.provide('agents', {
 const fiber = ctx.plugin(host.default)
 await fiber
 try {
-  const gateway = ctx.get('universalAttachments')
+  const gateway = ctx.get('airdrop')
   const methods = remoteMethods(gateway).map(item => item.method)
   if (JSON.stringify(methods) !== JSON.stringify(expectedMethods)) {
     throw new Error(`Built Gateway Remote methods are invalid: ${methods.join(', ')}`)
@@ -67,7 +65,7 @@ try {
 } finally {
   await fiber.dispose()
   stopAgents()
-  stopApiProxy()
+  stopSessionController()
   stopAttachments()
   stopSessions()
   stopWebServer()
@@ -99,7 +97,7 @@ vm.runInNewContext(clientCode, {
   setTimeout,
   clearTimeout,
 })
-if (registration?.id !== 'dsh-universal-attachments') throw new Error('Client module registration is invalid')
+if (registration?.id !== 'dsh-airdrop') throw new Error('Client module registration is invalid')
 const client = registration.factory(() => stub)
 if (typeof client.apply !== 'function' || !Array.isArray(client.inject)) {
   throw new Error('Client module exports are invalid')

@@ -758,11 +758,11 @@ export function installStyles(): () => void {
   // A previous bundle may have left its style tag behind (plugin remounts
   // without a full page reload); always replace it so this bundle's rules
   // win instead of being skipped by a stale guard.
-  for (const stale of document.querySelectorAll('style[data-plugin="dsh-universal-attachments"]')) {
+  for (const stale of document.querySelectorAll('style[data-plugin="dsh-airdrop"]')) {
     stale.remove()
   }
   const style = document.createElement('style')
-  style.dataset.plugin = 'dsh-universal-attachments'
+  style.dataset.plugin = 'dsh-airdrop'
   style.textContent = CSS
   document.head.append(style)
   return () => { style.remove() }

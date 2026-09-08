@@ -1,4 +1,4 @@
-import type { SessionId } from '@deepseek-ai/dsh-client-runtime/client'
+import type { SessionId } from '@deepseek-ai/dsh-session'
 
 export interface RpcError {
   readonly code?: string
@@ -64,7 +64,7 @@ export interface DraftSummary {
   readonly roots: readonly RootSummary[]
 }
 
-export interface UniversalAttachmentsCalls {
+export interface AirdropCalls {
   prepareBatch(sessionId: string, rootsJson: string): Promise<RpcResult<PrepareBatchResult>>
   beginFile(
     sessionId: string,
@@ -86,7 +86,7 @@ export interface UniversalAttachmentsCalls {
 }
 
 export interface RemoteNamespace {
-  universalAttachments?: UniversalAttachmentsCalls
+  airdrop?: AirdropCalls
   $mount(options: {
     package: string
     descriptors: readonly InvocationDescriptorLike[]

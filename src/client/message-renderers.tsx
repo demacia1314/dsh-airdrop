@@ -1,9 +1,10 @@
 import { createElement, type ComponentType, type ReactNode } from 'react'
-import type { ChatNodeViewProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
+import type { ChatNodeViewProps } from '@deepseek-ai/dsh-client-ui-chat/client'
 import type { StoredEntry } from '@deepseek-ai/dsh-client-ui-slots'
 import { isAttachmentOnlySource } from '../shared/manifest.js'
 
-const PLUGIN_NAME = 'dsh-universal-attachments'
+const PLUGIN_NAME = 'dsh-airdrop'
+const LEGACY_PLUGIN_NAME = 'dsh-universal-attachments'
 const CONVERSATION_LOCALE = 'conversation'
 const NATIVE_RENDERER_PRIORITY = 0
 
@@ -26,7 +27,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function isHandledAttachmentContext(source: unknown): boolean {
   return isRecord(source)
     && source.kind === 'plugin'
-    && source.plugin === PLUGIN_NAME
+    && (source.plugin === PLUGIN_NAME || source.plugin === LEGACY_PLUGIN_NAME)
     && source.historyHandledBy === 'user-message'
 }
 

@@ -21,7 +21,7 @@ function setOverlayVisible(visible: boolean): void {
     if (overlayElement !== undefined) return
     const element = document.createElement('div')
     element.className = 'dua-drop-overlay'
-    element.dataset.plugin = 'dsh-universal-attachments'
+    element.dataset.plugin = 'dsh-airdrop'
     element.setAttribute('role', 'status')
     const card = document.createElement('div')
     card.className = 'dua-drop-card'
@@ -113,7 +113,7 @@ export function installDropzone(env: DropzoneEnv): () => void {
       return env.intake(current.sessionId, items, current.inputActions, preparationId)
     }).catch(error => {
       env.store.failPreparation(current.sessionId, preparationId, error instanceof Error ? error.message : String(error))
-      console.error('[dsh-universal-attachments] drop failed', error)
+      console.error('[dsh-airdrop] drop failed', error)
     })
   }
   const paste = (event: ClipboardEvent): void => {

@@ -335,14 +335,14 @@ function json(res: ServerResponse, status: number, payload: unknown, headers: Re
   res.end(body)
 }
 
-export class UniversalAttachmentBackend {
+export class AirdropBackend {
   private readonly locks = new SerialKeyedLock()
   private readonly workspaceLocks = new SerialKeyedLock()
   private readonly uploads = new Map<string, UploadGrant>()
   private readonly previews = new Map<string, PreviewGrant>()
   private attachmentClock = 0
 
-  constructor(readonly prefix = '/_dsh/universal-attachments/v1') {}
+  constructor(readonly prefix = '/_dsh/airdrop/v1') {}
 
   private nextAttachmentTimestamp(): number {
     this.attachmentClock = Math.max(Date.now(), this.attachmentClock + 1)

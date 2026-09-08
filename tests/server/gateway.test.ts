@@ -7,8 +7,8 @@ import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { Session, SessionEvent, UserMessage } from '@deepseek-ai/dsh-session'
 import { remoteMethods } from '@deepseek-ai/dsh-typert-protocol'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import DefaultGateway, { UniversalAttachmentsGateway } from '../../src/index.js'
-import { UniversalAttachmentBackend } from '../../src/server/backend.js'
+import DefaultGateway, { AirdropGateway } from '../../src/index.js'
+import { AirdropBackend } from '../../src/server/backend.js'
 import { attachmentBatchId } from '../../src/server/injection.js'
 import { sessionHash } from '../../src/server/store.js'
 
@@ -26,7 +26,7 @@ interface Harness {
 }
 
 interface StartedGateway {
-  readonly gateway: UniversalAttachmentsGateway
+  readonly gateway: AirdropGateway
   readonly dispose: () => Promise<void>
 }
 
@@ -47,6 +47,7 @@ async function createHarness(): Promise<Harness> {
     id: sessionId,
     header: { id: sessionId, cwd },
     events,
+    snapshotEvents: () => events,
   } as unknown as Session
   const flush = vi.fn<(subject: Session) => Promise<boolean>>()
   flush.mockResolvedValue(true)
@@ -68,22 +69,22 @@ async function createHarness(): Promise<Harness> {
       mediaTypes: ['image/png', 'image/jpeg', 'image/webp', 'image/gif'],
     },
   } as unknown as Context['attachments'])
-  const disposeApiProxy = ctx.provide('apiProxy', {
-    sessions: { prompt: async () => ({ result: { ok: true, value: { accepted: true } } }) },
+  const disposeSessionController = ctx.provide('sessionController', {
+    prompt: async () => ({ accepted: true }),
   })
   const disposeAgents = ctx.provide('agents', {
     get: () => undefined,
     list: () => [],
   })
-  cleanups.push(disposeWebServer, disposeSessions, disposeAttachments, disposeApiProxy, disposeAgents)
+  cleanups.push(disposeWebServer, disposeSessions, disposeAttachments, disposeSessionController, disposeAgents)
   return { ctx, cwd, sessionId, session, events, flush }
 }
 
 async function startGateway(ctx: Context): Promise<StartedGateway> {
-  const fiber = ctx.plugin(UniversalAttachmentsGateway)
+  const fiber = ctx.plugin(AirdropGateway)
   await fiber
   cleanups.push(() => fiber.dispose())
-  const gateway = ctx.get('universalAttachments') as UniversalAttachmentsGateway | undefined
+  const gateway = ctx.get('airdrop') as AirdropGateway | undefined
   if (gateway === undefined) throw new Error('Gateway service did not start')
   return { gateway, dispose: fiber.dispose }
 }
@@ -93,7 +94,7 @@ async function startGateway(ctx: Context): Promise<StartedGateway> {
  * (rpcId-less) pending claim through its own backend, mirroring the historical
  * claimReadyRoots flow the ack lifecycle is built around.
  */
-async function prepareReadyClaim(gateway: UniversalAttachmentsGateway, harness: Harness): Promise<string> {
+async function prepareReadyClaim(gateway: AirdropGateway, harness: Harness): Promise<string> {
   const prepared = await gateway.prepareBatch(harness.sessionId, JSON.stringify([{
     clientKey: 'client-file',
     name: 'note.txt',
@@ -104,7 +105,7 @@ async function prepareReadyClaim(gateway: UniversalAttachmentsGateway, harness: 
   const root = prepared.roots[0]
   if (root === undefined) throw new Error('Attachment root was not prepared')
   await gateway.beginFile(harness.sessionId, prepared.draftId, root.rootId, '', 'note.txt', 0, 'text/plain', 1)
-  const backend = (gateway as unknown as { readonly backend: UniversalAttachmentBackend }).backend
+  const backend = (gateway as unknown as { readonly backend: AirdropBackend }).backend
   const claim = await backend.claimReadyRoots(harness.cwd, harness.sessionId)
   if (claim === null) throw new Error('Attachment claim was not prepared')
   return claim.claimId
@@ -186,9 +187,9 @@ async function waitForPendingClaims(harness: Harness, expected: 'present' | 'cle
   throw new Error(`Timed out waiting for pending claims to be ${expected}`)
 }
 
-describe('universal attachment Gateway claim lifecycle', () => {
+describe('airdrop Gateway claim lifecycle', () => {
   it('exposes loader dependencies and all Typert remote methods', async () => {
-    expect(DefaultGateway.inject).toEqual(['webServer', 'sessions', 'attachments', 'apiProxy', 'agents'])
+    expect(DefaultGateway.inject).toEqual(['webServer', 'sessions', 'attachments', 'sessionController', 'agents'])
 
     const harness = await createHarness()
     const { gateway } = await startGateway(harness.ctx)

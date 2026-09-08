@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1 — 2026-09-08
+
+- Renamed: the package is now **`dsh-airdrop`**, matching the repository name (was `dsh-universal-attachments`). Session-log manifest fields, the plugin message source name, and the on-disk `.dsh/uploads/.universal-attachments` metadata directory keep being read for backward compatibility; new writes use the airdrop spelling.
+- Compatibility: adapted to DSH `0.1.2-rc.1`. The host `apiProxy` service was removed upstream; the gateway now admits draft submissions through the `sessionController` service's `prompt` verb, and `Session.events` was replaced by `snapshotEvents()`.
+- Client: migrated to the 0.1.2 browser module graph — conversation node definitions register through `ctx.uiConversation.events.register`, `ChatNodeViewProps`/`ChatNodeDataMap` now come from `@deepseek-ai/dsh-client-ui-chat/client`, `SessionId` from `@deepseek-ai/dsh-session`, and the client externals dropped the removed `dsh-client-runtime`/`dsh-client-ui-attachment` module ids.
+
 ## 0.1.3 — 2026-08-29
 
 - Fix: drag-and-drop upload crashed the Chromium renderer with `RESULT_CODE_KILLED_BAD_MESSAGE` when the page was served from a non-secure origin (`http://` on a LAN IP/hostname, i.e. a NAS behind a reverse proxy). `DataTransferItem.getAsFileSystemHandle()` is a Chromium crash on insecure origins (crbug 1219885, still reproducible as of 2024-11), so `rootsFromDrop` now calls it only inside `isSecureContext` and falls back to the legacy `webkitGetAsEntry`/`getAsEntry`/`transfer.files` path otherwise. The paperclip button was never affected (it reads `FileList` directly).

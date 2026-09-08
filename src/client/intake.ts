@@ -1,10 +1,10 @@
-import type { ClientContext, SessionId } from '@deepseek-ai/dsh-client-runtime/client'
-import type { ConversationController } from '@deepseek-ai/dsh-client-ui-conversation/client'
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context, Context as ClientContext } from '@deepseek-ai/cordis'
+import type { IConversation } from '@deepseek-ai/dsh-client-ui-conversation/client'
+import type { SessionId } from '@deepseek-ai/dsh-session'
 import type { UploadRoot } from './files.js'
 import { rpcText, tr } from './locales.js'
 import type { InputActionsFace, UploadStore } from './store.js'
-import type { PreparedRoot, UniversalAttachmentsCalls } from './types.js'
+import type { PreparedRoot, AirdropCalls } from './types.js'
 
 const MAX_CONCURRENT_FILES = 3
 const MAX_ATTEMPTS = 3
@@ -17,7 +17,7 @@ function isGateway413(error: unknown): boolean {
 
 export interface IntakeEnv {
   readonly ctx: ClientContext
-  readonly api: () => UniversalAttachmentsCalls | undefined
+  readonly api: () => AirdropCalls | undefined
   readonly store: UploadStore
 }
 
@@ -42,14 +42,14 @@ function errorText(error: unknown): string {
 }
 
 function notification(env: IntakeEnv, sessionId: SessionId, level: 'info' | 'error', text: string): void {
-  const conversation = env.ctx.get('conversation') as ConversationController | undefined
+  const conversation = env.ctx.get('conversation') as IConversation | undefined
   const sessions = (env.ctx as unknown as { sessions: { scope(id: SessionId): Context | null | undefined } }).sessions
   const actx = sessions.scope(sessionId)
   if (conversation !== undefined && actx != null) {
     conversation.input.for(actx).notify(level, text)
     return
   }
-  console[level === 'error' ? 'error' : 'log'](`[dsh-universal-attachments] ${text}`)
+  console[level === 'error' ? 'error' : 'log'](`[dsh-airdrop] ${text}`)
 }
 
 async function queryOffset(uploadUrl: string, ticket: string): Promise<number> {
@@ -100,7 +100,7 @@ function localPreview(root: UploadRoot): { previewUrl?: string; previewMime?: st
 }
 
 async function uploadOne(
-  api: UniversalAttachmentsCalls,
+  api: AirdropCalls,
   sessionId: string,
   draftId: string,
   prepared: PreparedRoot,
@@ -194,7 +194,7 @@ export async function runIntake(
     return { uploadedRoots: 0, failed }
   }
 
-  let preparedResult: Awaited<ReturnType<UniversalAttachmentsCalls['prepareBatch']>>
+  let preparedResult: Awaited<ReturnType<AirdropCalls['prepareBatch']>>
   try {
     preparedResult = await api.prepareBatch(key, JSON.stringify(roots.map(root => ({
       clientKey: root.clientKey,

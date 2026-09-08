@@ -17,14 +17,14 @@ import {
   IconPaperclipOutline16,
   IconPlayOutline16,
 } from '@deepseek-ai/dsh-client-ui-primitives'
-import type { SessionId } from '@deepseek-ai/dsh-client-runtime/client'
+import type { SessionId } from '@deepseek-ai/dsh-session'
 import { ArchiveGlyph, CodeGlyph, DocGlyph } from './fileicons.js'
 import { fileExtension, fileVisualKind } from './filekind.js'
 import { formatSize } from './intake.js'
 import { rpcText, tr, type Key, type LocaleProps } from './locales.js'
 import { RootPreview } from './preview.js'
 import type { UploadStore } from './store.js'
-import type { DraftSummary, RootSummary, UniversalAttachmentsCalls } from './types.js'
+import type { DraftSummary, RootSummary, AirdropCalls } from './types.js'
 
 export interface UploadDockProps extends LocaleProps {
   readonly sessionId?: SessionId
@@ -34,7 +34,7 @@ export interface UploadDockProps extends LocaleProps {
     readonly draftRev?: number
   }
   readonly store?: UploadStore
-  readonly api?: () => UniversalAttachmentsCalls | undefined
+  readonly api?: () => AirdropCalls | undefined
 }
 
 interface ImageRailRoot extends AttachmentRailItem {
@@ -330,7 +330,7 @@ export function UploadDock({ sessionId, input, store, api, t }: UploadDockProps)
   }
 
   return (
-    <div className="dua-dock" data-plugin="dsh-universal-attachments">
+    <div className="dua-dock" data-plugin="dsh-airdrop">
       {imageItems.length > 0 && (
         <div className="dua-native-image-rail">
           <AttachmentRail

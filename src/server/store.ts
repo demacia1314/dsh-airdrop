@@ -278,6 +278,7 @@ export class AttachmentStore {
     this.sessionHash = sessionHash(sessionId)
     this.uploadRoot = path.join(this.cwd, '.dsh', 'uploads')
     this.contentRoot = path.join(this.uploadRoot, this.sessionHash)
+    // On-disk name predates the plugin rename; kept so existing session drafts/claims resolve.
     this.metadataDir = path.join(this.uploadRoot, '.universal-attachments')
     this.metadataPath = path.join(this.metadataDir, `${this.sessionHash}.json`)
   }

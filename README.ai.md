@@ -7,7 +7,7 @@ Human documentation: [中文](README.md) · [English](README.en.md).
 ## Identity
 
 - Project name: **dsh-airdrop**
-- Installable package name: **`dsh-universal-attachments`** (do not rename; existing installs depend on it)
+- Installable package name: **`dsh-airdrop`** (renamed from `dsh-universal-attachments` in 0.2.1; the on-disk metadata directory `.dsh/uploads/.universal-attachments` and legacy session-log field names are kept readable for backward compatibility)
 - Repository: https://github.com/demacia1314/dsh-airdrop
 - Category: DSH web UI plugin (attachments / file upload)
 - License: MIT
@@ -29,12 +29,12 @@ Adds full attachment support to the DSH web UI:
 ## Install
 
 ```powershell
-dsh plugin --profile web add dsh-universal-attachments
+dsh plugin --profile web add dsh-airdrop
 dsh web   # restart required
 ```
 
 From source instead: `pnpm install && pnpm run build && pnpm pack`, then
-`dsh plugin --profile web add .\dsh-universal-attachments-0.1.1.tgz`.
+`dsh plugin --profile web add .\dsh-airdrop-0.2.1.tgz`.
 
 Prerequisites: DSH web profile; the session must have a workspace `cwd`.
 

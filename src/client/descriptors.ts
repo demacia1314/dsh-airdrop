@@ -72,7 +72,7 @@ const removedResult = z.object({ removed: z.boolean() })
 const submittedResult = z.object({ accepted: z.literal(true), rootIds: z.array(z.string()) })
 const previewResult = z.object({ url: z.string(), name: z.string(), mime: z.string(), size: z.number() })
 
-const session = stringParameter('sessionId', 'dsh-universal-attachments#SessionId')
+const session = stringParameter('sessionId', 'dsh-airdrop#SessionId')
 
 function descriptor(
   method: string,
@@ -80,9 +80,9 @@ function descriptor(
   result: StrictCodec,
 ): InvocationDescriptorLike {
   return {
-    id: `dsh-universal-attachments#universalAttachments/${method}`,
-    service: 'universalAttachments',
-    namespace: 'universalAttachments',
+    id: `dsh-airdrop#airdrop/${method}`,
+    service: 'airdrop',
+    namespace: 'airdrop',
     method,
     invocation: { kind: 'direct' },
     parameters,
@@ -91,26 +91,26 @@ function descriptor(
 }
 
 export function buildDescriptors(): readonly InvocationDescriptorLike[] {
-  const draft = stringParameter('draftId', 'dsh-universal-attachments#DraftId')
-  const root = stringParameter('rootId', 'dsh-universal-attachments#RootId')
+  const draft = stringParameter('draftId', 'dsh-airdrop#DraftId')
+  const root = stringParameter('rootId', 'dsh-airdrop#RootId')
   return [
-    descriptor('prepareBatch', [session, stringParameter('rootsJson', 'dsh-universal-attachments#RootsJson')], resultCodec('dsh-universal-attachments#PrepareBatchResult', prepareResult)),
+    descriptor('prepareBatch', [session, stringParameter('rootsJson', 'dsh-airdrop#RootsJson')], resultCodec('dsh-airdrop#PrepareBatchResult', prepareResult)),
     descriptor('beginFile', [
       session,
       draft,
       root,
-      stringParameter('relativePath', 'dsh-universal-attachments#RelativePath'),
-      stringParameter('name', 'dsh-universal-attachments#Name'),
-      numberParameter('size', 'dsh-universal-attachments#Size'),
-      stringParameter('mime', 'dsh-universal-attachments#Mime'),
-      numberParameter('lastModified', 'dsh-universal-attachments#LastModified'),
-    ], resultCodec('dsh-universal-attachments#BeginFileResult', beginResult)),
-    descriptor('listDraft', [session], resultCodec('dsh-universal-attachments#ListDraftResult', listDraftResult)),
-    descriptor('listRoot', [session, draft, root], resultCodec('dsh-universal-attachments#ListRootResult', listRootResult)),
-    descriptor('listStoredRoot', [session, root], resultCodec('dsh-universal-attachments#ListStoredRootResult', listRootResult)),
-    descriptor('removeRoot', [session, draft, root], resultCodec('dsh-universal-attachments#RemovedResult', removedResult)),
-    descriptor('clearDraft', [session, draft], resultCodec('dsh-universal-attachments#RemovedResult', removedResult)),
-    descriptor('submitDraft', [session, draft], resultCodec('dsh-universal-attachments#SubmitDraftResult', submittedResult)),
-    descriptor('issuePreview', [session, stringParameter('relPath', 'dsh-universal-attachments#RelPath')], resultCodec('dsh-universal-attachments#PreviewResult', previewResult)),
+      stringParameter('relativePath', 'dsh-airdrop#RelativePath'),
+      stringParameter('name', 'dsh-airdrop#Name'),
+      numberParameter('size', 'dsh-airdrop#Size'),
+      stringParameter('mime', 'dsh-airdrop#Mime'),
+      numberParameter('lastModified', 'dsh-airdrop#LastModified'),
+    ], resultCodec('dsh-airdrop#BeginFileResult', beginResult)),
+    descriptor('listDraft', [session], resultCodec('dsh-airdrop#ListDraftResult', listDraftResult)),
+    descriptor('listRoot', [session, draft, root], resultCodec('dsh-airdrop#ListRootResult', listRootResult)),
+    descriptor('listStoredRoot', [session, root], resultCodec('dsh-airdrop#ListStoredRootResult', listRootResult)),
+    descriptor('removeRoot', [session, draft, root], resultCodec('dsh-airdrop#RemovedResult', removedResult)),
+    descriptor('clearDraft', [session, draft], resultCodec('dsh-airdrop#RemovedResult', removedResult)),
+    descriptor('submitDraft', [session, draft], resultCodec('dsh-airdrop#SubmitDraftResult', submittedResult)),
+    descriptor('issuePreview', [session, stringParameter('relPath', 'dsh-airdrop#RelPath')], resultCodec('dsh-airdrop#PreviewResult', previewResult)),
   ]
 }

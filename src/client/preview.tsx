@@ -7,10 +7,10 @@ import {
 import { formatSize } from './intake.js'
 import { rpcText, tr } from './locales.js'
 import type { UploadStore } from './store.js'
-import type { RootEntry, RootSummary, UniversalAttachmentsCalls } from './types.js'
+import type { RootEntry, RootSummary, AirdropCalls } from './types.js'
 
 export interface PreviewEnv {
-  readonly api: () => UniversalAttachmentsCalls | undefined
+  readonly api: () => AirdropCalls | undefined
   readonly store: UploadStore
 }
 

@@ -1,13 +1,13 @@
 import type {
   ChatConversationViewNode,
-  ConversationNodeDefinition,
-} from '@deepseek-ai/dsh-client-runtime/client'
-import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
+} from '@deepseek-ai/dsh-client-ui-chat/client'
+import type { ConversationNodeDefinition } from '@deepseek-ai/dsh-client-ui-conversation/client'
+import type {} from '@deepseek-ai/dsh-client-ui-chat/client'
 import type { AttachmentHistoryRoot } from '../shared/manifest.js'
 import { readAttachmentManifest } from '../shared/manifest.js'
 import { readLegacyAttachmentHistory } from './history.js'
 
-export const ATTACHMENT_CHAT_NODE_KIND = 'universal-attachments' as const
+export const ATTACHMENT_CHAT_NODE_KIND = 'airdrop' as const
 
 export interface AttachmentChatData {
   readonly batchId: string
@@ -16,9 +16,9 @@ export interface AttachmentChatData {
   readonly roots: readonly AttachmentHistoryRoot[]
 }
 
-declare module '@deepseek-ai/dsh-client-ui-conversation/client' {
+declare module '@deepseek-ai/dsh-client-ui-chat/client' {
   interface ChatNodeDataMap {
-    'universal-attachments': AttachmentChatData
+    'airdrop': AttachmentChatData
   }
 }
 
@@ -47,7 +47,7 @@ function attachmentData(event: ConversationEvent): AttachmentChatData | undefine
 }
 
 export const attachmentConversationDefinition: ConversationNodeDefinition<AttachmentChatData> = {
-  kind: 'dsh-universal-attachments',
+  kind: 'dsh-airdrop',
   target: 'chat',
   match(event) {
     if (event.type !== 'user/message') return null

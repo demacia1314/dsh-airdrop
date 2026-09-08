@@ -1,8 +1,10 @@
 export const ATTACHMENT_MANIFEST_VERSION = 1
-export const ATTACHMENT_SOURCE_FIELD = 'universalAttachments'
+export const ATTACHMENT_SOURCE_FIELD = 'airdrop'
 export const ATTACHMENT_ONLY_DRAFT_MARKER = '\u2063'
-export const ATTACHMENT_ONLY_SOURCE_FIELD = 'universalAttachmentsOnly'
-
+export const ATTACHMENT_ONLY_SOURCE_FIELD = 'airdropOnly'
+/** Pre-rename field spellings persisted in older session logs; read-only compat. */
+export const LEGACY_ATTACHMENT_SOURCE_FIELD = 'universalAttachments'
+export const LEGACY_ATTACHMENT_ONLY_SOURCE_FIELD = 'universalAttachmentsOnly'
 export interface AttachmentHistoryRoot {
   readonly rootId: string
   readonly name: string
@@ -54,7 +56,7 @@ function parseRoot(value: unknown): AttachmentHistoryRoot | undefined {
 
 export function readAttachmentManifest(source: unknown): AttachmentHistoryManifest | undefined {
   if (!isRecord(source)) return undefined
-  const value = source[ATTACHMENT_SOURCE_FIELD]
+  const value = source[ATTACHMENT_SOURCE_FIELD] ?? source[LEGACY_ATTACHMENT_SOURCE_FIELD]
   if (!isRecord(value) || value.version !== ATTACHMENT_MANIFEST_VERSION || typeof value.batchId !== 'string') {
     return undefined
   }
@@ -69,5 +71,6 @@ export function readAttachmentManifest(source: unknown): AttachmentHistoryManife
 }
 
 export function isAttachmentOnlySource(source: unknown): boolean {
-  return isRecord(source) && source[ATTACHMENT_ONLY_SOURCE_FIELD] === true
+  return isRecord(source)
+    && (source[ATTACHMENT_ONLY_SOURCE_FIELD] === true || source[LEGACY_ATTACHMENT_ONLY_SOURCE_FIELD] === true)
 }

@@ -7,7 +7,7 @@ import {
   Tooltip,
   type MenuEntry,
 } from '@deepseek-ai/dsh-client-ui-primitives'
-import type { SessionId } from '@deepseek-ai/dsh-client-runtime/client'
+import type { SessionId } from '@deepseek-ai/dsh-session'
 import { rootsFromFiles, type UploadRoot } from './files.js'
 import { tr, type LocaleProps } from './locales.js'
 import type { InputActionsFace, UploadStore } from './store.js'
@@ -76,7 +76,7 @@ export function AttachButton({ sessionId, inputActions, store, intake, t }: Atta
   ]
 
   return (
-    <div className="dua-attach" ref={root} data-plugin="dsh-universal-attachments">
+    <div className="dua-attach" ref={root} data-plugin="dsh-airdrop">
       <Menu
         open={open}
         side="top"

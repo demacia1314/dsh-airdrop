@@ -1,4 +1,6 @@
-import type { ClientContext, SessionId } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context as ClientContext } from '@deepseek-ai/cordis'
+import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
+import type { SessionId } from '@deepseek-ai/dsh-session'
 import type { AttachmentHistoryRoot } from '../shared/manifest.js'
 import { AttachmentNode, type StoredAttachmentPreview } from './AttachmentNode.js'
 import { AttachButton } from './AttachButton.js'
@@ -15,7 +17,7 @@ import {
 } from './message-renderers.js'
 import { createUploadStore, type InputActionsFace } from './store.js'
 import { installStyles } from './styles.js'
-import type { RemoteFace, UniversalAttachmentsCalls } from './types.js'
+import type { RemoteFace, AirdropCalls } from './types.js'
 import { UploadDock } from './UploadDock.js'
 
 interface LocaleServiceFace {
@@ -27,28 +29,28 @@ export { AttachButton } from './AttachButton.js'
 export { rootsFromDrop, rootsFromFiles } from './files.js'
 export { runIntake } from './intake.js'
 
-export const inject = ['slots', 'sessions', 'conversation', 'conversationEvents', 'remote']
+export const inject = ['slots', 'sessions', 'locale', 'uiConversation', 'remote']
 
 export async function apply(ctx: ClientContext): Promise<void> {
-  ctx.effect(() => installStyles(), 'dsh-universal-attachments: styles')
+  ctx.effect(() => installStyles(), 'dsh-airdrop: styles')
   const store = createUploadStore()
-  ctx.effect(() => () => { store.dispose() }, 'dsh-universal-attachments: local upload state')
+  ctx.effect(() => () => { store.dispose() }, 'dsh-airdrop: local upload state')
 
   const remote = (ctx as unknown as RemoteFace).remote
   const unmount = await remote.$mount({
-    package: 'dsh-universal-attachments',
+    package: 'dsh-airdrop',
     descriptors: buildDescriptors(),
   })
-  ctx.effect(() => () => { void unmount() }, 'dsh-universal-attachments: remote descriptors')
+  ctx.effect(() => () => { void unmount() }, 'dsh-airdrop: remote descriptors')
 
-  let calls: UniversalAttachmentsCalls | undefined
-  ctx.inject(['remote', 'remote.universalAttachments'], (remoteCtx: ClientContext): void => {
-    calls = (remoteCtx as unknown as RemoteFace).remote.universalAttachments
+  let calls: AirdropCalls | undefined
+  ctx.inject(['remote', 'remote.airdrop'], (remoteCtx: ClientContext): void => {
+    calls = (remoteCtx as unknown as RemoteFace).remote.airdrop
   })
-  const api = (): UniversalAttachmentsCalls | undefined => calls
+  const api = (): AirdropCalls | undefined => calls
   ctx.effect(
-    () => ctx.conversationEvents.register(attachmentConversationDefinition),
-    'dsh-universal-attachments: conversation attachment nodes',
+    () => ctx.uiConversation.events.register(attachmentConversationDefinition),
+    'dsh-airdrop: conversation attachment nodes',
   )
   const intakeEnv: IntakeEnv = { ctx, api, store }
   const intake = (
@@ -63,12 +65,12 @@ export async function apply(ctx: ClientContext): Promise<void> {
     ctx.effect(() => {
       const dispose = locale.register(NS, { zh, en })
       return () => { if (typeof dispose === 'function') dispose() }
-    }, 'dsh-universal-attachments: dictionaries')
+    }, 'dsh-airdrop: dictionaries')
     setBoundT(locale.bind(NS))
 
     ctx.slots.inject('conversation.input.left', () => ctx.slots.register({
       name: 'conversation.input.left',
-      id: 'universal-attachments',
+      id: 'airdrop',
       order: 20,
       locale: NS,
       inject: (sessionId: SessionId) => ({
@@ -79,7 +81,7 @@ export async function apply(ctx: ClientContext): Promise<void> {
 
     ctx.slots.inject('conversation.input.dock', () => ctx.slots.register({
       name: 'conversation.input.dock',
-      id: 'universal-attachments-dock',
+      id: 'airdrop-dock',
       order: 30,
       locale: NS,
       inject: () => ({
@@ -114,7 +116,7 @@ export async function apply(ctx: ClientContext): Promise<void> {
 
     ctx.slots.inject('conversation.chat.node', () => ctx.slots.register({
       name: 'conversation.chat.node',
-      key: 'universal-attachments',
+      key: 'airdrop',
       locale: NS,
       inject: () => ({
         resolvePreview: async (
@@ -145,5 +147,5 @@ export async function apply(ctx: ClientContext): Promise<void> {
       inputActions,
       preparationId,
     ),
-  }), 'dsh-universal-attachments: window drop and paste')
+  }), 'dsh-airdrop: window drop and paste')
 }

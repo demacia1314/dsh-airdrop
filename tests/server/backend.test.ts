@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
 import { afterEach, describe, expect, it } from 'vitest'
-import { UniversalAttachmentBackend, parseBatchRoots } from '../../src/server/backend.js'
+import { AirdropBackend, parseBatchRoots } from '../../src/server/backend.js'
 
 const cleanups: Array<() => Promise<void>> = []
 
@@ -20,7 +20,7 @@ afterEach(async () => {
   for (const cleanup of cleanups.splice(0).reverse()) await cleanup()
 })
 
-describe('universal attachment backend', () => {
+describe('airdrop backend', () => {
   it('bounds declared storage and rejects separator-bearing root names', () => {
     expect(() => parseBatchRoots(JSON.stringify([{
       clientKey: 'too-large',
@@ -41,7 +41,7 @@ describe('universal attachment backend', () => {
   it('streams an upload, resumes by offset, and serves a single preview range', async () => {
     const cwd = await mkdtemp(path.join(tmpdir(), 'dsh-attachments-'))
     cleanups.push(() => rm(cwd, { recursive: true, force: true }))
-    const backend = new UniversalAttachmentBackend()
+    const backend = new AirdropBackend()
     const server = createServer((req, res) => { void backend.handleHttp(req, res) })
     await new Promise<void>((resolve, reject) => {
       server.once('error', reject)
@@ -165,7 +165,7 @@ describe('universal attachment backend', () => {
   it('finishes an in-flight write before rolling an oversized streamed request back', async () => {
     const cwd = await mkdtemp(path.join(tmpdir(), 'dsh-attachments-'))
     cleanups.push(() => rm(cwd, { recursive: true, force: true }))
-    const backend = new UniversalAttachmentBackend()
+    const backend = new AirdropBackend()
     const server = createServer((req, res) => { void backend.handleHttp(req, res) })
     await new Promise<void>((resolve, reject) => {
       server.once('error', reject)
@@ -242,7 +242,7 @@ describe('universal attachment backend', () => {
   it('rejects an empty upload chunk without advancing its offset', async () => {
     const cwd = await mkdtemp(path.join(tmpdir(), 'dsh-attachments-'))
     cleanups.push(() => rm(cwd, { recursive: true, force: true }))
-    const backend = new UniversalAttachmentBackend()
+    const backend = new AirdropBackend()
     const server = createServer((req, res) => { void backend.handleHttp(req, res) })
     await new Promise<void>((resolve, reject) => {
       server.once('error', reject)
@@ -295,7 +295,7 @@ describe('universal attachment backend', () => {
   it('rolls a partially received chunk back when the client disconnects', async () => {
     const cwd = await mkdtemp(path.join(tmpdir(), 'dsh-attachments-'))
     cleanups.push(() => rm(cwd, { recursive: true, force: true }))
-    const backend = new UniversalAttachmentBackend()
+    const backend = new AirdropBackend()
     const server = createServer((req, res) => { void backend.handleHttp(req, res) })
     await new Promise<void>((resolve, reject) => {
       server.once('error', reject)
@@ -351,7 +351,7 @@ describe('universal attachment backend', () => {
   it('isolates physical roots between sessions sharing one cwd', async () => {
     const cwd = await mkdtemp(path.join(tmpdir(), 'dsh-attachments-'))
     cleanups.push(() => rm(cwd, { recursive: true, force: true }))
-    const backend = new UniversalAttachmentBackend()
+    const backend = new AirdropBackend()
     const manifest = (clientKey: string) => JSON.stringify([{
       clientKey,
       name: 'same.txt',
@@ -376,7 +376,7 @@ describe('universal attachment backend', () => {
   it('rejects a hard-link replacement without modifying the linked victim', async () => {
     const cwd = await mkdtemp(path.join(tmpdir(), 'dsh-attachments-'))
     cleanups.push(() => rm(cwd, { recursive: true, force: true }))
-    const backend = new UniversalAttachmentBackend()
+    const backend = new AirdropBackend()
     const server = createServer((req, res) => { void backend.handleHttp(req, res) })
     await new Promise<void>((resolve, reject) => {
       server.once('error', reject)
@@ -415,7 +415,7 @@ describe('universal attachment backend', () => {
   it('rejects a new claim after ready content is statically replaced without hiding the draft', async () => {
     const cwd = await mkdtemp(path.join(tmpdir(), 'dsh-attachments-'))
     cleanups.push(() => rm(cwd, { recursive: true, force: true }))
-    const backend = new UniversalAttachmentBackend()
+    const backend = new AirdropBackend()
     const prepared = await backend.prepareBatch(cwd, 'session-claim-replace', JSON.stringify([{
       clientKey: 'claim-replace', name: 'claim.txt', kind: 'file', fileCount: 1, totalSize: 0,
     }]))
@@ -437,7 +437,7 @@ describe('universal attachment backend', () => {
   it('revalidates a reused claim after deletion and preserves the pending claim', async () => {
     const cwd = await mkdtemp(path.join(tmpdir(), 'dsh-attachments-'))
     cleanups.push(() => rm(cwd, { recursive: true, force: true }))
-    const backend = new UniversalAttachmentBackend()
+    const backend = new AirdropBackend()
     const prepared = await backend.prepareBatch(cwd, 'session-claim-delete', JSON.stringify([{
       clientKey: 'claim-delete', name: 'claim.txt', kind: 'file', fileCount: 1, totalSize: 0,
     }]))
@@ -461,7 +461,7 @@ describe('universal attachment backend', () => {
   it('rejects preview when the session storage is replaced by a symlink or junction', async () => {
     const cwd = await mkdtemp(path.join(tmpdir(), 'dsh-attachments-'))
     cleanups.push(() => rm(cwd, { recursive: true, force: true }))
-    const backend = new UniversalAttachmentBackend()
+    const backend = new AirdropBackend()
     const server = createServer((req, res) => { void backend.handleHttp(req, res) })
     await new Promise<void>((resolve, reject) => {
       server.once('error', reject)
@@ -495,7 +495,7 @@ describe('universal attachment backend', () => {
   it('enforces a retained-byte quota across sessions in one workspace', async () => {
     const cwd = await mkdtemp(path.join(tmpdir(), 'dsh-attachments-'))
     cleanups.push(() => rm(cwd, { recursive: true, force: true }))
-    const backend = new UniversalAttachmentBackend()
+    const backend = new AirdropBackend()
     const fiftyGiB = 50 * 1024 * 1024 * 1024
     const fullDraft = (prefix: string) => JSON.stringify([
       { clientKey: `${prefix}-1`, name: `${prefix}-1.bin`, kind: 'file', fileCount: 1, totalSize: fiftyGiB },

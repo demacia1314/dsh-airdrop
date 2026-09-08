@@ -8,7 +8,7 @@ import type {} from '@deepseek-ai/dsh-host-webserver'
 import type {} from '@deepseek-ai/dsh-session'
 import { ATTACHMENT_ONLY_DRAFT_MARKER, readAttachmentManifest } from './shared/manifest.js'
 import {
-  UniversalAttachmentBackend,
+  AirdropBackend,
   type PendingClaimSnapshot,
   type ReadyRootClaim,
   type ReadyRootReservation,
@@ -25,8 +25,8 @@ export * from './server/path.js'
 export * from './server/range.js'
 export * from './server/types.js'
 
-export const name = 'universalAttachments'
-export const inject = ['webServer', 'sessions', 'attachments', 'apiProxy', 'agents']
+export const name = 'airdrop'
+export const inject = ['webServer', 'sessions', 'attachments', 'sessionController', 'agents']
 
 const CLAIM_ACK_RETRY_BASE_MS = 250
 const CLAIM_ACK_RETRY_MAX_MS = 4_000
@@ -47,7 +47,7 @@ const REMOTE_METHOD_NAMES = [
   'submitDraft',
   'issuePreview',
 ] as const
-const remoteInitializers: Array<(this: UniversalAttachmentsGateway) => void> = []
+const remoteInitializers: Array<(this: AirdropGateway) => void> = []
 
 function imageMediaType(mime: string, name: string): ImageMediaType | undefined {
   const normalized = mime.trim().toLowerCase()
@@ -89,27 +89,22 @@ function agentIsRunning(agent: AgentLike): boolean {
   return agent.status === 'running'
 }
 
-interface HostPromptError {
-  readonly code: string
-  readonly message: string
-  readonly details: Record<string, unknown>
+
+/**
+ * The in-process Session command surface that replaced the removed `apiProxy`
+ * service in dsh 0.1.2: `dsh-api-session-controller` registers the
+ * `sessionController` Context service, and its `prompt` admits one browser
+ * prompt after Agent resume and image validation.
+ */
+interface SessionPromptFace {
+  readonly requestId: string
+  readonly sessionId: string
+  readonly mode: 'queue' | 'steer'
+  readonly content: readonly [{ readonly type: 'text'; readonly text: string }]
 }
 
-interface HostApiProxyFace {
-  readonly sessions: {
-    prompt(request: {
-      readonly rpcId: string
-      readonly payload: {
-        readonly sessionId: string
-        readonly mode: 'queue'
-        readonly content: readonly [{ readonly type: 'text'; readonly text: string }]
-      }
-    }): Promise<{
-      readonly result:
-        | { readonly ok: true; readonly value: { readonly accepted: true } }
-        | { readonly ok: false; readonly error: HostPromptError }
-    }>
-  }
+interface SessionControllerFace {
+  prompt(request: SessionPromptFace, signal?: AbortSignal): Promise<{ readonly accepted: true }>
 }
 
 interface SavedClaimImages {
@@ -237,17 +232,17 @@ function withoutAttachmentOnlyPrompts(
 }
 
 function sessionClaimIds(session: Session): ReadonlySet<string> {
-  return new Set(session.events.flatMap(event => {
+  return new Set(session.snapshotEvents().flatMap(event => {
     if (event.type !== 'user/message' || event.data.source.kind !== 'user') return []
     const manifest = readAttachmentManifest(event.data.source)
     return manifest === undefined ? [] : [manifest.batchId]
   }))
 }
 
-export class UniversalAttachmentsGateway extends TypertRemoteService {
-  static inject = ['webServer', 'sessions', 'attachments', 'apiProxy', 'agents']
+export class AirdropGateway extends TypertRemoteService {
+  static inject = ['webServer', 'sessions', 'attachments', 'sessionController', 'agents']
 
-  private readonly backend = new UniversalAttachmentBackend()
+  private readonly backend = new AirdropBackend()
   private readonly ackJobs = new Set<string>()
   private readonly ackRetries = new Map<string, ReturnType<typeof setTimeout>>()
   private readonly ackAttempts = new Map<string, number>()
@@ -260,7 +255,7 @@ export class UniversalAttachmentsGateway extends TypertRemoteService {
   private disposed = false
 
   constructor(ctx: Context) {
-    super(ctx, 'universalAttachments')
+    super(ctx, 'airdrop')
     for (const initialize of remoteInitializers) initialize.call(this)
     ctx.effect(
       () => ctx.webServer.register({
@@ -268,44 +263,44 @@ export class UniversalAttachmentsGateway extends TypertRemoteService {
         path: this.backend.prefix,
         handler: (req, res) => this.backend.handleHttp(req, res),
       }),
-      'universal attachment HTTP routes',
+      'airdrop HTTP routes',
     )
     ctx.effect(
       () => ctx.on('session/event', (session, event) => { this.observeClaimEvent(session, event) }),
-      'universal attachment committed-message observer',
+      'airdrop committed-message observer',
     )
     ctx.effect(
       () => ctx.on('session/created', session => {
-        for (const event of session.events) this.observeClaimEvent(session, event)
+        for (const event of session.snapshotEvents()) this.observeClaimEvent(session, event)
       }),
-      'universal attachment recovery observer',
+      'airdrop recovery observer',
     )
     const registerInboxEvent = ctx.on as unknown as RegisterInboxEvent
     ctx.effect(
       () => registerInboxEvent.call(ctx, 'agent/inbox/inserted', ({ agent, message }) => {
         this.observeInboxInserted(agent, message)
       }),
-      'universal attachment inbox replacement observer',
+      'airdrop inbox replacement observer',
     )
     ctx.effect(
       () => registerInboxEvent.call(ctx, 'agent/inbox/discarded', ({ agent, message }) => {
         this.scheduleDiscardRelease(agent, message)
       }),
-      'universal attachment inbox discard observer',
+      'airdrop inbox discard observer',
     )
     const registerAgentCreated = ctx.on as unknown as RegisterAgentCreated
     ctx.effect(
       () => registerAgentCreated.call(ctx, 'agent/created', ({ agent }) => {
         this.scheduleAgentReconcile(agent)
       }),
-      'universal attachment live-agent recovery observer',
+      'airdrop live-agent recovery observer',
     )
     const registerAgentStatus = ctx.on as unknown as RegisterAgentStatus
     ctx.effect(
       () => registerAgentStatus.call(ctx, 'agent/status', ({ agent, status }) => {
         if (status === 'idle') this.scheduleAgentReconcile(agent)
       }),
-      'universal attachment idle reconciliation observer',
+      'airdrop idle reconciliation observer',
     )
     ctx.effect(
       () => () => {
@@ -321,10 +316,10 @@ export class UniversalAttachmentsGateway extends TypertRemoteService {
         this.reconcileAttempts.clear()
         this.reconcileReruns.clear()
       },
-      'universal attachment claim acknowledgement retries',
+      'airdrop claim acknowledgement retries',
     )
     for (const session of ctx.sessions.list()) {
-      for (const event of session.events) this.observeClaimEvent(session, event)
+      for (const event of session.snapshotEvents()) this.observeClaimEvent(session, event)
     }
     const agents = (ctx as unknown as { readonly agents: AgentRegistryFace }).agents
     for (const agent of agents.list()) this.scheduleAgentReconcile(agent)
@@ -338,7 +333,7 @@ export class UniversalAttachmentsGateway extends TypertRemoteService {
           await this.recoverInboxClaimReservations(payload.agent, payloadUsers)
         } catch (error: unknown) {
           this.ctx.logger.warn(
-            `universal attachments: inbox claim reservation recovery failed: ${error instanceof Error ? error.message : String(error)}`,
+            `airdrop: inbox claim reservation recovery failed: ${error instanceof Error ? error.message : String(error)}`,
           )
           this.scheduleAgentReconcile(payload.agent)
         }
@@ -351,7 +346,7 @@ export class UniversalAttachmentsGateway extends TypertRemoteService {
             await this.backend.releaseClaimForRpcIds(cwd, sessionId, ids)
           } catch (error: unknown) {
             this.ctx.logger.warn(
-              `universal attachments: matched claim release failed: ${error instanceof Error ? error.message : String(error)}`,
+              `airdrop: matched claim release failed: ${error instanceof Error ? error.message : String(error)}`,
             )
             this.scheduleAgentReconcile(payload.agent)
           }
@@ -363,7 +358,7 @@ export class UniversalAttachmentsGateway extends TypertRemoteService {
             await this.backend.releaseClaim(cwd, sessionId, claimId)
           } catch (error: unknown) {
             this.ctx.logger.warn(
-              `universal attachments: claim release failed: ${error instanceof Error ? error.message : String(error)}`,
+              `airdrop: claim release failed: ${error instanceof Error ? error.message : String(error)}`,
             )
             this.scheduleAgentReconcile(payload.agent)
           }
@@ -451,7 +446,7 @@ export class UniversalAttachmentsGateway extends TypertRemoteService {
             try {
               savedImages = await this.saveClaimImages(cwd, sessionId, activeClaim, target, payload.signal)
             } catch (error: unknown) {
-              this.ctx.logger.warn(`universal attachments: native image persistence failed: ${error instanceof Error ? error.message : String(error)}`)
+              this.ctx.logger.warn(`airdrop: native image persistence failed: ${error instanceof Error ? error.message : String(error)}`)
             }
             if (payload.signal.aborted) {
               await releaseClaims(activeClaims)
@@ -481,11 +476,11 @@ export class UniversalAttachmentsGateway extends TypertRemoteService {
         } catch (error: unknown) {
           if (releasableClaims.length > 0) await releaseClaims(releasableClaims)
           else await releaseMatched()
-          this.ctx.logger.warn(`universal attachments: pre-step injection failed: ${error instanceof Error ? error.message : String(error)}`)
+          this.ctx.logger.warn(`airdrop: pre-step injection failed: ${error instanceof Error ? error.message : String(error)}`)
           return withoutAttachmentOnlyPrompts(base, markerRpcIds)
         }
       }),
-      'universal attachment pre-step injection',
+      'airdrop pre-step injection',
     )
   }
 
@@ -518,7 +513,7 @@ export class UniversalAttachmentsGateway extends TypertRemoteService {
         totalBytes += file.data.byteLength
       } catch (error: unknown) {
         this.ctx.logger.warn(
-          `universal attachments: skipped native image ${entry.name}: ${error instanceof Error ? error.message : String(error)}`,
+          `airdrop: skipped native image ${entry.name}: ${error instanceof Error ? error.message : String(error)}`,
         )
       }
       if (signal.aborted || imageCount >= limits.maxImagesPerMessage) break
@@ -534,7 +529,7 @@ export class UniversalAttachmentsGateway extends TypertRemoteService {
         rootIds.add(candidate.rootId)
       } catch (error: unknown) {
         this.ctx.logger.warn(
-          `universal attachments: failed to save native image ${candidate.input.name ?? '(unnamed)'}: ${error instanceof Error ? error.message : String(error)}`,
+          `airdrop: failed to save native image ${candidate.input.name ?? '(unnamed)'}: ${error instanceof Error ? error.message : String(error)}`,
         )
       }
     }
@@ -664,7 +659,7 @@ export class UniversalAttachmentsGateway extends TypertRemoteService {
       if (!released) this.scheduleAgentReconcile(reservation.agent)
     } catch (error: unknown) {
       this.ctx.logger.warn(
-        `universal attachments: late inbox claim release failed: ${error instanceof Error ? error.message : String(error)}`,
+        `airdrop: late inbox claim release failed: ${error instanceof Error ? error.message : String(error)}`,
       )
       this.scheduleAgentReconcile(reservation.agent)
     }
@@ -679,7 +674,7 @@ export class UniversalAttachmentsGateway extends TypertRemoteService {
       )
     } catch (error: unknown) {
       this.ctx.logger.warn(
-        `universal attachments: late inbox reservation release failed: ${error instanceof Error ? error.message : String(error)}`,
+        `airdrop: late inbox reservation release failed: ${error instanceof Error ? error.message : String(error)}`,
       )
       this.scheduleAgentReconcile(reservation.agent)
     }
@@ -802,7 +797,7 @@ export class UniversalAttachmentsGateway extends TypertRemoteService {
       if (cwd === undefined || cwd.length === 0) return
       void this.backend.releaseClaimForRpcId(cwd, String(agent.id), rpcId).catch((error: unknown) => {
         this.ctx.logger.warn(
-          `universal attachments: discarded inbox claim release failed: ${error instanceof Error ? error.message : String(error)}`,
+          `airdrop: discarded inbox claim release failed: ${error instanceof Error ? error.message : String(error)}`,
         )
         this.scheduleAgentReconcile(agent)
       })
@@ -835,7 +830,7 @@ export class UniversalAttachmentsGateway extends TypertRemoteService {
           if (retry) this.reconcileAttempts.set(key, attempt)
           else this.reconcileAttempts.delete(key)
           this.ctx.logger.warn(
-            `universal attachments: pending claim reconciliation failed: ${error instanceof Error ? error.message : String(error)}${retry ? `; retry ${attempt} scheduled` : ''}`,
+            `airdrop: pending claim reconciliation failed: ${error instanceof Error ? error.message : String(error)}${retry ? `; retry ${attempt} scheduled` : ''}`,
           )
         } finally {
           this.reconcileJobs.delete(key)
@@ -930,7 +925,7 @@ export class UniversalAttachmentsGateway extends TypertRemoteService {
           if (retry) this.ackAttempts.set(key, attempt)
           else this.ackAttempts.delete(key)
           this.ctx.logger.warn(
-            `universal attachments: claim acknowledgement failed: ${error instanceof Error ? error.message : String(error)}${retry ? `; retry ${attempt} scheduled` : ''}`,
+            `airdrop: claim acknowledgement failed: ${error instanceof Error ? error.message : String(error)}${retry ? `; retry ${attempt} scheduled` : ''}`,
           )
         } finally {
           this.ackJobs.delete(key)
@@ -1012,23 +1007,21 @@ export class UniversalAttachmentsGateway extends TypertRemoteService {
     const rpcId = randomUUID()
     const claim = await this.backend.reserveReadyDraft(cwd, sessionId, draftId, rpcId)
     try {
-      const apiProxy = (this.ctx as unknown as { readonly apiProxy: HostApiProxyFace }).apiProxy
-      const response = await apiProxy.sessions.prompt({
-        rpcId,
-        payload: {
-          sessionId,
-          mode: 'queue',
-          content: [{ type: 'text', text: ATTACHMENT_ONLY_DRAFT_MARKER }],
-        },
+      // dsh 0.1.2 removed `apiProxy`; `sessionController` owns in-process prompt admission.
+      const { sessionController } = this.ctx as unknown as { readonly sessionController: SessionControllerFace }
+      await sessionController.prompt({
+        requestId: rpcId,
+        sessionId,
+        mode: 'queue',
+        content: [{ type: 'text', text: ATTACHMENT_ONLY_DRAFT_MARKER }],
       })
-      if (!response.result.ok) throw new Error(response.result.error.message)
       return { accepted: true as const, rootIds: claim.roots.map(root => root.rootId) }
     } catch (error: unknown) {
       try {
         await this.backend.releaseClaim(cwd, sessionId, claim.claimId, rpcId)
       } catch (releaseError: unknown) {
         this.ctx.logger.warn(
-          `universal attachments: rejected submission claim release failed: ${releaseError instanceof Error ? releaseError.message : String(releaseError)}`,
+          `airdrop: rejected submission claim release failed: ${releaseError instanceof Error ? releaseError.message : String(releaseError)}`,
         )
         const agents = (this.ctx as unknown as { readonly agents: AgentRegistryFace }).agents
         const agent = agents.get(sessionId as SessionId)
@@ -1043,10 +1036,10 @@ export class UniversalAttachmentsGateway extends TypertRemoteService {
   }
 }
 
-type GatewayRemoteMethod = (this: UniversalAttachmentsGateway, ...args: unknown[]) => unknown
+type GatewayRemoteMethod = (this: AirdropGateway, ...args: unknown[]) => unknown
 
 for (const methodName of REMOTE_METHOD_NAMES) {
-  const implementation = Reflect.get(UniversalAttachmentsGateway.prototype, methodName)
+  const implementation = Reflect.get(AirdropGateway.prototype, methodName)
   if (typeof implementation !== 'function') throw new Error(`Missing Remote method: ${methodName}`)
   Remote(
     implementation as GatewayRemoteMethod,
@@ -1055,10 +1048,10 @@ for (const methodName of REMOTE_METHOD_NAMES) {
       name: methodName,
       static: false,
       private: false,
-      addInitializer(initializer: (this: UniversalAttachmentsGateway) => void) {
+      addInitializer(initializer: (this: AirdropGateway) => void) {
         remoteInitializers.push(initializer)
       },
-    } as unknown as ClassMethodDecoratorContext<UniversalAttachmentsGateway, GatewayRemoteMethod>,
+    } as unknown as ClassMethodDecoratorContext<AirdropGateway, GatewayRemoteMethod>,
   )
 }
 
@@ -1116,7 +1109,7 @@ function parameter(name: string, schema: z.ZodType, symbol = name) {
     source: 'json' as const,
     codec: {
       mode: 'strict' as const,
-      typeSymbol: `dsh-universal-attachments#${symbol}`,
+      typeSymbol: `dsh-airdrop#${symbol}`,
       schema,
     },
   }
@@ -1124,15 +1117,15 @@ function parameter(name: string, schema: z.ZodType, symbol = name) {
 
 function invocation(method: string, parameters: readonly ReturnType<typeof parameter>[], schema: z.ZodType, resultSymbol: string) {
   return {
-    id: `dsh-universal-attachments#universalAttachments/${method}`,
-    service: 'universalAttachments',
-    namespace: 'universalAttachments',
+    id: `dsh-airdrop#airdrop/${method}`,
+    service: 'airdrop',
+    namespace: 'airdrop',
     method,
     invocation: { kind: 'direct' as const },
     parameters,
     result: {
       mode: 'strict' as const,
-      typeSymbol: `dsh-universal-attachments#${resultSymbol}`,
+      typeSymbol: `dsh-airdrop#${resultSymbol}`,
       schema,
     },
   }
@@ -1143,7 +1136,7 @@ const draft = () => parameter('draftId', z.string(), 'DraftId')
 const root = () => parameter('rootId', z.string(), 'RootId')
 
 export const TYPERT_MANIFEST = {
-  package: 'dsh-universal-attachments',
+  package: 'dsh-airdrop',
   face: 'host',
   schemas: [],
   invocations: [
@@ -1172,4 +1165,4 @@ export const TYPERT_MANIFEST = {
 /** Alias required by the DSH `./typert` host-face loader. */
 export const TYPERT = TYPERT_MANIFEST
 
-export default UniversalAttachmentsGateway
+export default AirdropGateway

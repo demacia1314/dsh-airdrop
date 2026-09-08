@@ -1,9 +1,10 @@
-import type { ClientContext, SessionId } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context as ClientContext } from '@deepseek-ai/cordis'
+import type { SessionId } from '@deepseek-ai/dsh-session'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { rootsFromFiles } from '../../src/client/files.js'
 import { runIntake } from '../../src/client/intake.js'
 import { createUploadStore } from '../../src/client/store.js'
-import type { UniversalAttachmentsCalls } from '../../src/client/types.js'
+import type { AirdropCalls } from '../../src/client/types.js'
 
 afterEach(() => {
   vi.unstubAllGlobals()
@@ -39,13 +40,13 @@ describe('runIntake', () => {
         ok: true,
         value: {
           uploadId: 'upload-1',
-          uploadUrl: '/_dsh/universal-attachments/upload/token',
+          uploadUrl: '/_dsh/airdrop/upload/token',
           ticket: 'ticket',
           offset: 0,
           chunkSize: 4,
         },
       }),
-    } as unknown as UniversalAttachmentsCalls
+    } as unknown as AirdropCalls
     const roots = rootsFromFiles([new File(['data'], 'file.bin', { type: 'application/octet-stream', lastModified: 1 })])
     const root = roots[0]
     if (root === undefined) throw new Error('Test root was not created')
@@ -85,13 +86,13 @@ describe('runIntake', () => {
         ok: true,
         value: {
           uploadId: 'upload-1',
-          uploadUrl: '/_dsh/universal-attachments/upload/token',
+          uploadUrl: '/_dsh/airdrop/upload/token',
           ticket: 'ticket',
           offset: 0,
           chunkSize: 4 * 1024 * 1024,
         },
       }),
-    } as unknown as UniversalAttachmentsCalls
+    } as unknown as AirdropCalls
     const roots = rootsFromFiles([
       new File([new Uint8Array(300)], 'big.pptx', { type: 'application/octet-stream', lastModified: 1 }),
     ])

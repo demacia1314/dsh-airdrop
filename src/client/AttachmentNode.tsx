@@ -4,7 +4,7 @@ import {
   IconPaperclipOutline16,
   IconPlayOutline16,
 } from '@deepseek-ai/dsh-client-ui-primitives'
-import type { ChatNodeViewProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
+import type { ChatNodeViewProps } from '@deepseek-ai/dsh-client-ui-chat/client'
 import type { AttachmentHistoryRoot } from '../shared/manifest.js'
 import { ArchiveGlyph, CodeGlyph, DocGlyph } from './fileicons.js'
 import { fileExtension, fileVisualKind } from './filekind.js'
@@ -12,7 +12,7 @@ import { formatSize } from './intake.js'
 import { tr, type LocaleProps } from './locales.js'
 import { RootPreview } from './preview.js'
 import type { UploadStore } from './store.js'
-import type { RootSummary, UniversalAttachmentsCalls } from './types.js'
+import type { RootSummary, AirdropCalls } from './types.js'
 
 export interface StoredAttachmentPreview {
   readonly url: string
@@ -20,13 +20,13 @@ export interface StoredAttachmentPreview {
 }
 
 export interface AttachmentNodeProps
-  extends Omit<ChatNodeViewProps<'universal-attachments'>, 't'>,
+  extends Omit<ChatNodeViewProps<'airdrop'>, 't'>,
   LocaleProps {
   readonly resolvePreview?: (
     sessionId: string,
     root: AttachmentHistoryRoot,
   ) => Promise<StoredAttachmentPreview | undefined>
-  readonly api?: () => UniversalAttachmentsCalls | undefined
+  readonly api?: () => AirdropCalls | undefined
   readonly store?: UploadStore
 }
 
@@ -116,7 +116,7 @@ export function AttachmentNode({
   }, [key, previewable, resolvePreview])
 
   return (
-    <div className="dua-chat-row" data-plugin="dsh-universal-attachments">
+    <div className="dua-chat-row" data-plugin="dsh-airdrop">
       <div className="dua-chat-attachments" role="group" aria-label={lc('history.attachments')}>
         {roots.map(root => (
           <button

@@ -1,7 +1,7 @@
 import type { Translate } from '@deepseek-ai/dsh-client-ui-slots'
 import type { RpcError } from './types.js'
 
-export const NS = 'dsh-universal-attachments'
+export const NS = 'dsh-airdrop'
 
 export const zh = {
   'drop.pending': '\u6b63\u5728\u8bfb\u53d6\u62d6\u5165\u7684\u9644\u4ef6',
@@ -89,7 +89,7 @@ export const en = {
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface LocaleNamespaceMap {
-    'dsh-universal-attachments': Key
+    'dsh-airdrop': Key
   }
 }
 
