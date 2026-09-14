@@ -176,19 +176,25 @@ async function mountRemoteDescriptors(
   remote: RemoteFace['remote'],
 ): Promise<Awaited<ReturnType<RemoteFace['remote']['$mount']>>> {
   let timeout: ReturnType<typeof setTimeout> | undefined
-  const timedOut = new Promise<never>((_resolve, reject) => {
+  let didTimeout = false
+  const mounted = remote.$mount({
+    package: 'dsh-airdrop',
+    descriptors: buildDescriptors(),
+  }).then(unmount => {
+    if (!didTimeout) return unmount
+    void Promise.resolve(unmount()).catch(error => {
+      console.error('[dsh-airdrop] Late Remote mount cleanup failed.', error)
+    })
+    return new Promise<never>(() => {})
+  })
+  const timeoutPromise = new Promise<never>((_resolve, reject) => {
     timeout = setTimeout(() => {
+      didTimeout = true
       reject(new Error(`dsh-airdrop: Remote API did not mount within ${String(REMOTE_MOUNT_TIMEOUT_MS)}ms`))
     }, REMOTE_MOUNT_TIMEOUT_MS)
   })
   try {
-    return await Promise.race([
-      remote.$mount({
-        package: 'dsh-airdrop',
-        descriptors: buildDescriptors(),
-      }),
-      timedOut,
-    ])
+    return await Promise.race([mounted, timeoutPromise])
   } finally {
     if (timeout !== undefined) clearTimeout(timeout)
   }
