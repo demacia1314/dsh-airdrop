@@ -15,7 +15,7 @@ import {
   createAttachmentAwareUserRenderer,
   nativeRendererGuard,
 } from './message-renderers.js'
-import { createUploadStore, type InputActionsFace } from './store.js'
+import { createUploadStore, type InputActionsFace, type UploadStore } from './store.js'
 import { installStyles } from './styles.js'
 import type { RemoteFace, AirdropCalls } from './types.js'
 import { UploadDock } from './UploadDock.js'
@@ -25,22 +25,44 @@ interface LocaleServiceFace {
   bind(namespace: string): (key: string, params?: Record<string, unknown>) => string
 }
 
+const REMOTE_MOUNT_TIMEOUT_MS = 10_000
+
 export { AttachButton } from './AttachButton.js'
 export { rootsFromDrop, rootsFromFiles } from './files.js'
 export { runIntake } from './intake.js'
 
 export const inject = ['slots', 'sessions', 'locale', 'uiConversation', 'remote']
 
-export async function apply(ctx: ClientContext): Promise<void> {
+export function apply(ctx: ClientContext): void {
   ctx.effect(() => installStyles(), 'dsh-airdrop: styles')
   const store = createUploadStore()
-  ctx.effect(() => () => { store.dispose() }, 'dsh-airdrop: local upload state')
-
-  const remote = (ctx as unknown as RemoteFace).remote
-  const unmount = await remote.$mount({
-    package: 'dsh-airdrop',
-    descriptors: buildDescriptors(),
+  let disposed = false
+  ctx.effect(() => () => {
+    disposed = true
+    store.dispose()
+  }, 'dsh-airdrop: local upload state')
+  void mountClient(ctx, store, () => disposed).catch(error => {
+    console.error('[dsh-airdrop] Upload controls were not started.', error)
   })
+}
+
+async function mountClient(
+  ctx: ClientContext,
+  store: UploadStore,
+  isDisposed: () => boolean,
+): Promise<void> {
+  const remote = (ctx as unknown as RemoteFace).remote
+  let unmount: Awaited<ReturnType<typeof remote.$mount>>
+  try {
+    unmount = await mountRemoteDescriptors(remote)
+  } catch (error) {
+    console.error('[dsh-airdrop] Upload controls were not started because the DSH Remote API did not become ready.', error)
+    return
+  }
+  if (isDisposed()) {
+    await unmount()
+    return
+  }
   ctx.effect(() => () => { void unmount() }, 'dsh-airdrop: remote descriptors')
 
   let calls: AirdropCalls | undefined
@@ -148,4 +170,26 @@ export async function apply(ctx: ClientContext): Promise<void> {
       preparationId,
     ),
   }), 'dsh-airdrop: window drop and paste')
+}
+
+async function mountRemoteDescriptors(
+  remote: RemoteFace['remote'],
+): Promise<Awaited<ReturnType<RemoteFace['remote']['$mount']>>> {
+  let timeout: ReturnType<typeof setTimeout> | undefined
+  const timedOut = new Promise<never>((_resolve, reject) => {
+    timeout = setTimeout(() => {
+      reject(new Error(`dsh-airdrop: Remote API did not mount within ${String(REMOTE_MOUNT_TIMEOUT_MS)}ms`))
+    }, REMOTE_MOUNT_TIMEOUT_MS)
+  })
+  try {
+    return await Promise.race([
+      remote.$mount({
+        package: 'dsh-airdrop',
+        descriptors: buildDescriptors(),
+      }),
+      timedOut,
+    ])
+  } finally {
+    if (timeout !== undefined) clearTimeout(timeout)
+  }
 }
