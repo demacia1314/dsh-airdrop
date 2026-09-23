@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { ImageLightbox } from './platform/image-lightbox.js'
 import {
-  IconDownloadOutline16,
+  IconDownloadOutlineMedium,
   Modal,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import { formatSize } from './intake.js'
@@ -197,7 +197,7 @@ export function RootPreview({ env, sessionId, draftId, root, onClose }: RootPrev
   const footer = state.kind === 'file' && state.file.downloadable
     ? (
         <a className="dua-preview-download" href={state.file.url} download={state.file.name}>
-          <IconDownloadOutline16 />
+          <IconDownloadOutlineMedium />
           <span>{tr('preview.download')}</span>
         </a>
       )

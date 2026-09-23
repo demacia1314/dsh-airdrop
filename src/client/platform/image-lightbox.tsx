@@ -3,7 +3,7 @@
  *
  * Vendored from deepseek-ai/deepseek-harness (MIT License),
  * `packages/client/ui-attachment/src/ImageLightbox.tsx` @ aa6c361a9
- * (release dsh 0.1.1-rc.2; byte-identical to the 0.1.0-rc.6 file).
+ * (release dsh 0.1.1-rc.2, with icon names updated for the current UI API).
  *
  * Upstream ships this as a zero-cordis pure-React atom. rc.6 exported it from
  * `@deepseek-ai/dsh-client-ui-attachment`; rc.2 internalized it behind the
@@ -17,7 +17,7 @@
 
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { IconCloseOutline16 } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconCloseOutlineMedium } from '@deepseek-ai/dsh-client-ui-primitives'
 
 /** Lightbox strings the owner resolves from its own locale namespace. */
 export interface ImageLightboxLabels {
@@ -72,7 +72,7 @@ export function ImageLightbox({ src, alt, labels, onClose }: {
       <div className="dua-lightbox-mask" aria-hidden="true" onMouseDown={onClose} />
       <img className="dua-lightbox-image" src={src} alt={alt} />
       <button ref={closeRef} type="button" className="dua-lightbox-close" aria-label={labels.close} onClick={onClose}>
-        <IconCloseOutline16 size={16} />
+        <IconCloseOutlineMedium size={16} />
       </button>
     </div>,
     document.body,

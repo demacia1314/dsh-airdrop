@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react'
 import {
   Button,
-  IconFolderOpenOutline16,
-  IconPaperclipOutline16,
+  IconFolderOpenOutlineMedium,
+  IconPaperclipOutlineMedium,
   Menu,
   Tooltip,
   type MenuEntry,
@@ -65,12 +65,12 @@ export function AttachButton({ sessionId, inputActions, store, intake, t }: Atta
   const items: readonly MenuEntry[] = [
     {
       id: 'files',
-      icon: <IconPaperclipOutline16 />,
+      icon: <IconPaperclipOutlineMedium />,
       label: <span data-dua-attach-choice>{lc('attach.files')}</span>,
     },
     {
       id: 'folder',
-      icon: <IconFolderOpenOutline16 />,
+      icon: <IconFolderOpenOutlineMedium />,
       label: <span data-dua-attach-choice>{lc('attach.folder')}</span>,
     },
   ]
@@ -98,7 +98,7 @@ export function AttachButton({ sessionId, inputActions, store, intake, t }: Atta
               type="button"
               variant="toolbar"
               size="sm"
-              icon={<IconPaperclipOutline16 />}
+              icon={<IconPaperclipOutlineMedium />}
               className="dua-attach-button"
               aria-label={lc('attach.title')}
               disabled={busy || sessionId === undefined}

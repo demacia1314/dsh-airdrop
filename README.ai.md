@@ -11,7 +11,7 @@ Human documentation: [中文](README.md) · [English](README.en.md).
 - Repository: https://github.com/demacia1314/dsh-airdrop
 - Category: DSH web UI plugin (attachments / file upload)
 - License: MIT
-- Target runtime: DeepSeek Harness (DSH) **0.1.0-rc.6 – 0.1.1-rc.2** (both rc lines; the rc.2-only UI atoms are vendored in-repo under `src/client/platform/`), web profile
+- Target runtime: DeepSeek Harness (DSH) **0.1.5-rc.2 through 0.1.7**, including the **0.1.7-alpha** line; the rc.2-only UI atoms are vendored in-repo under `src/client/platform/`; web profile
 - Awesome list entry: https://awesome-dsh-plugin.com/p/demacia1314/dsh-airdrop/ (`ui` category)
 
 ## What it does
@@ -34,7 +34,7 @@ dsh web   # restart required
 ```
 
 From source instead: `pnpm install && pnpm run build && pnpm pack`, then
-`dsh plugin --profile web add .\dsh-airdrop-0.2.1.tgz`.
+`dsh plugin --profile web add .\dsh-airdrop-0.2.3.tgz`.
 
 Prerequisites: DSH web profile; the session must have a workspace `cwd`.
 

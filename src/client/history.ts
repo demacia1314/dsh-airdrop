@@ -1,7 +1,5 @@
-import type { AttachmentHistoryRoot } from '../shared/manifest.js'
+import { isAirdropMessageSource, type AttachmentHistoryRoot } from '../shared/manifest.js'
 
-const PLUGIN_NAME = 'dsh-airdrop'
-const LEGACY_PLUGIN_NAME = 'dsh-universal-attachments'
 const REFERENCE_LINE = /^(?<symbol>\u{1F4CE}|\u{1F4C1})\s+(?<name>.+)\s+\((?<meta>[^)]*)\)\s+\u2192\s+(?<relPath>\.dsh\/uploads\/.+?)\s*$/u
 const STORED_ROOT_BASENAME = /^\d{8}T\d{9}Z-(?<rootId>[A-Za-z0-9_-]{24})-/u
 
@@ -73,8 +71,7 @@ export function readLegacyAttachmentHistory(
 ): LegacyAttachmentHistory | undefined {
   if (
     !isRecord(source)
-    || source.kind !== 'plugin'
-    || (source.plugin !== PLUGIN_NAME && source.plugin !== LEGACY_PLUGIN_NAME)
+    || !isAirdropMessageSource(source)
     || Object.hasOwn(source, 'historyHandledBy')
   ) return undefined
 

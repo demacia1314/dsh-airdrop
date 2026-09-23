@@ -22,7 +22,7 @@ function glyph(path: ReactNode, size: number, viewBox = 16): ReactNode {
   )
 }
 
-/** Angle brackets, reads as code (the primitives' IconCodeOutline16 is a '#'). */
+/** Angle brackets, reads as code (the primitives' IconCodeOutlineMedium is a '#'). */
 export function CodeGlyph({ size = 15 }: GlyphProps): ReactNode {
   return glyph(<><path d="M5.5 4.5 2 8l3.5 3.5" /><path d="M10.5 4.5 14 8l-3.5 3.5" /></>, size)
 }
