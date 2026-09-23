@@ -4,7 +4,7 @@
  *
  * Vendored from deepseek-ai/deepseek-harness (MIT License),
  * `packages/client/ui-attachment/src/AttachmentRail.tsx` @ aa6c361a9
- * (release dsh 0.1.1-rc.2; byte-identical to the 0.1.0-rc.6 file).
+ * (release dsh 0.1.1-rc.2, with icon names updated for the current UI API).
  *
  * Upstream ships this as a zero-cordis pure-React atom. rc.6 exported it from
  * `@deepseek-ai/dsh-client-ui-attachment`; rc.2 internalized it behind the
@@ -18,7 +18,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import {
-  IconChevronLeftOutline14, IconChevronRightOutline14, IconCloseFill14,
+  IconChevronLeftOutlineMedium, IconChevronRightOutlineMedium, IconCloseFillMedium,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 
 /** Minimal clsx stand-in for the two-class join used by the rail arrows. */
@@ -170,7 +170,7 @@ export function AttachmentRail<T extends AttachmentRailItem>({ items, labels, on
           aria-label={labels.scrollLeft}
           onClick={() => { page(-1) }}
         >
-          <IconChevronLeftOutline14 />
+          <IconChevronLeftOutlineMedium />
         </button>
       )}
       <div
@@ -193,7 +193,7 @@ export function AttachmentRail<T extends AttachmentRailItem>({ items, labels, on
               aria-label={item.removeLabel}
               onClick={() => { onRemove(item) }}
             >
-              <IconCloseFill14 size={12} />
+              <IconCloseFillMedium size={12} />
             </button>
           </div>
         ))}
@@ -204,7 +204,7 @@ export function AttachmentRail<T extends AttachmentRailItem>({ items, labels, on
           aria-label={labels.scrollRight}
           onClick={() => { page(1) }}
         >
-          <IconChevronRightOutline14 />
+          <IconChevronRightOutlineMedium />
         </button>
       )}
     </div>

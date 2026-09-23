@@ -1,12 +1,20 @@
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
+import type { UserMessage } from '@deepseek-ai/dsh-session'
 import { describe, expect, it } from 'vitest'
 import {
   ATTACHMENT_SAFETY_LINE,
+  attachmentBatchId,
   buildAttachmentText,
   createAttachmentMessage,
   insertAttachmentMessageOnce,
 } from '../../src/server/injection.js'
 import type { RootState } from '../../src/server/types.js'
+
+declare module '@deepseek-ai/dsh-llm' {
+  interface MessageSourceMap {
+    'test-plugin': { kind: 'test-plugin' }
+  }
+}
 
 function root(overrides: Partial<RootState> = {}): RootState {
   return {
@@ -47,7 +55,7 @@ describe('attachment pre-step injection', () => {
   it('inserts once immediately before the first claimed human message', () => {
     const pluginContext = createUserMessage({
       content: [{ type: 'text', text: 'existing context' }],
-      source: { kind: 'plugin', plugin: 'other' },
+      source: { kind: 'test-plugin' },
     })
     const human = createUserMessage({
       content: [{ type: 'text', text: 'Please inspect these.' }],
@@ -66,7 +74,7 @@ describe('attachment pre-step injection', () => {
   it('waits when a tool-only step has no claimed human message', () => {
     const pluginContext = createUserMessage({
       content: [{ type: 'text', text: 'tool continuation context' }],
-      source: { kind: 'plugin', plugin: 'other' },
+      source: { kind: 'test-plugin' },
     })
     const attachment = createAttachmentMessage('claim-2', [root()])
     expect(insertAttachmentMessageOnce([pluginContext], [pluginContext], attachment, 'claim-2').inserted).toBe(false)
@@ -89,7 +97,7 @@ describe('attachment pre-step injection', () => {
   it('skips claimed plugin context and targets the first claimed human message', () => {
     const pluginContext = createUserMessage({
       content: [{ type: 'text', text: 'claimed plugin context' }],
-      source: { kind: 'plugin', plugin: 'other' },
+      source: { kind: 'test-plugin' },
     })
     const human = createUserMessage({
       content: [{ type: 'text', text: 'claimed prompt' }],
@@ -103,5 +111,15 @@ describe('attachment pre-step injection', () => {
       'claim-4',
     )
     expect(result.messages).toEqual([pluginContext, attachment, human])
+  })
+
+  it('uses the current source kind and still reads prior plugin-source batch ids', () => {
+    const current = createAttachmentMessage('current-batch', [root()])
+    const prior = {
+      ...current,
+      source: { kind: 'plugin', plugin: 'dsh-airdrop', batchId: 'prior-batch' },
+    } as unknown as UserMessage
+    expect(attachmentBatchId(current)).toBe('current-batch')
+    expect(attachmentBatchId(prior)).toBe('prior-batch')
   })
 })

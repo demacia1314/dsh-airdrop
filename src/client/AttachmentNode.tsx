@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
-  IconFolderClose16,
-  IconPaperclipOutline16,
-  IconPlayOutline16,
+  IconFolderCloseMedium,
+  IconPaperclipOutlineMedium,
+  IconPlayOutlineMedium,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ChatNodeViewProps } from '@deepseek-ai/dsh-client-ui-chat/client'
 import type { AttachmentHistoryRoot } from '../shared/manifest.js'
@@ -54,7 +54,7 @@ function AttachmentVisual({ root, preview }: {
   readonly preview: StoredAttachmentPreview | undefined
 }): ReactNode {
   if (root.kind === 'folder') {
-    return <span className="dua-chat-visual dua-chat-folder" aria-hidden="true"><IconFolderClose16 size={18} /></span>
+    return <span className="dua-chat-visual dua-chat-folder" aria-hidden="true"><IconFolderCloseMedium size={18} /></span>
   }
   if (preview?.mime.startsWith('image/') === true) {
     return <span className="dua-chat-visual dua-chat-media" aria-hidden="true"><img src={preview.url} alt="" /></span>
@@ -63,7 +63,7 @@ function AttachmentVisual({ root, preview }: {
     return (
       <span className="dua-chat-visual dua-chat-media" aria-hidden="true">
         <video src={preview.url} muted preload="metadata" />
-        <span className="dua-chat-play"><IconPlayOutline16 size={13} /></span>
+        <span className="dua-chat-play"><IconPlayOutlineMedium size={13} /></span>
       </span>
     )
   }
@@ -73,10 +73,10 @@ function AttachmentVisual({ root, preview }: {
     : kind === 'code'
       ? <CodeGlyph size={15} />
       : kind === 'audio'
-        ? <IconPlayOutline16 size={13} />
+        ? <IconPlayOutlineMedium size={13} />
         : kind === 'pdf' || kind === 'text'
           ? <DocGlyph size={15} />
-          : <IconPaperclipOutline16 size={15} />
+          : <IconPaperclipOutlineMedium size={15} />
   return (
     <span className={`dua-chat-visual dua-chat-file dua-kind-${kind}`} aria-hidden="true">
       {icon}

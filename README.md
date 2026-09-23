@@ -11,7 +11,7 @@
 [English](README.en.md)&ensp;·&ensp;[AI 版本](README.ai.md)&ensp;·&ensp;[更新日志](CHANGELOG.md)
 
 [![listed on awesome dsh plugin](https://awesome-dsh-plugin.com/badge.svg)](https://awesome-dsh-plugin.com/p/demacia1314/dsh-airdrop/)
-![DSH](https://img.shields.io/badge/DSH-0.1.1--rc.2-4c8dff)
+![DSH](https://img.shields.io/badge/DSH-0.1.7--alpha.2-4c8dff)
 ![License](https://img.shields.io/badge/license-MIT-3fb950)
 
 <img src="https://raw.githubusercontent.com/demacia1314/dsh-airdrop/main/assets/in-chat.png" alt="附件随消息发出,AI 直接读取文件内容" width="880">
@@ -50,7 +50,7 @@ dsh web
 pnpm install
 pnpm run build
 pnpm pack
-dsh plugin --profile web add .\dsh-airdrop-0.2.1.tgz
+dsh plugin --profile web add .\dsh-airdrop-0.2.3.tgz
 ```
 
 </details>

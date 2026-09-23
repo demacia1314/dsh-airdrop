@@ -113,6 +113,7 @@ export interface StrictCodec {
   readonly mode: 'strict'
   readonly typeSymbol: string
   readonly schema: { parse(value: unknown): unknown }
+  readonly create: () => { parse(value: unknown): unknown }
 }
 
 export interface ParameterDescriptor {

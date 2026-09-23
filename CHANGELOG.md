@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.3 — 2026-09-23
+
+- Compatibility: strict Typert codecs now provide schema factories, attachment messages use the current extensible source kind, and client icons use the current primitive names. These fixes let DSH 0.1.7 register the attachment remotes and render the existing UI; old plugin-source session records remain readable.
+- Compatibility: declare and typecheck against the DSH 0.1.7-alpha.2 package line while retaining the 0.1.5 prerelease and 0.1.6/0.1.7 stable ranges.
+
 ## 0.2.1 — 2026-09-08
 
 - Renamed: the package is now **`dsh-airdrop`**, matching the repository name (was `dsh-universal-attachments`). Session-log manifest fields, the plugin message source name, and the on-disk `.dsh/uploads/.universal-attachments` metadata directory keep being read for backward compatibility; new writes use the airdrop spelling.

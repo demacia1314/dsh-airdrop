@@ -11,11 +11,11 @@ import {
   type AttachmentRailItem,
 } from './platform/attachment-rail.js'
 import {
-  IconCloseOutline16,
-  IconFolderClose16,
-  IconLoadingOutline16,
-  IconPaperclipOutline16,
-  IconPlayOutline16,
+  IconCloseOutlineMedium,
+  IconFolderCloseMedium,
+  IconLoadingOutlineMedium,
+  IconPaperclipOutlineMedium,
+  IconPlayOutlineMedium,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { SessionId } from '@deepseek-ai/dsh-session'
 import { ArchiveGlyph, CodeGlyph, DocGlyph } from './fileicons.js'
@@ -73,13 +73,13 @@ function metaText(
 function FileVisual({ root, store }: { readonly root: RootSummary; readonly store: UploadStore | undefined }): ReactNode {
   const local = store?.root(root.rootId)
   if (root.kind === 'folder') {
-    return <span className="dua-file-visual dua-file-folder" aria-hidden="true"><IconFolderClose16 size={18} /></span>
+    return <span className="dua-file-visual dua-file-folder" aria-hidden="true"><IconFolderCloseMedium size={18} /></span>
   }
   if (local?.previewUrl !== undefined && local.previewMime?.startsWith('video/')) {
     return (
       <span className="dua-file-visual dua-file-video" aria-hidden="true">
         <video src={local.previewUrl} muted preload="metadata" />
-        <span><IconPlayOutline16 size={14} /></span>
+        <span><IconPlayOutlineMedium size={14} /></span>
       </span>
     )
   }
@@ -89,10 +89,10 @@ function FileVisual({ root, store }: { readonly root: RootSummary; readonly stor
     : kind === 'code'
       ? <CodeGlyph size={16} />
       : kind === 'audio'
-        ? <IconPlayOutline16 size={14} />
+        ? <IconPlayOutlineMedium size={14} />
         : kind === 'pdf' || kind === 'text'
           ? <DocGlyph size={16} />
-          : <IconPaperclipOutline16 size={16} />
+          : <IconPaperclipOutlineMedium size={16} />
   return (
     <span className={`dua-file-visual dua-file-tile dua-kind-${kind}`} aria-hidden="true">
       {icon}
@@ -355,7 +355,7 @@ export function UploadDock({ sessionId, input, store, api, t }: UploadDockProps)
               key={preparation.id}
             >
               <span className="dua-file-visual dua-file-generic dua-file-spinner" aria-hidden="true">
-                <IconLoadingOutline16 size={17} />
+                <IconLoadingOutlineMedium size={17} />
               </span>
               <span className="dua-file-copy">
                 <strong>{lc('drop.pending')}</strong>
@@ -371,7 +371,7 @@ export function UploadDock({ sessionId, input, store, api, t }: UploadDockProps)
                   aria-label={lc('upload.remove', { name: lc('drop.pending') })}
                   onClick={() => { store?.clearPreparation(key, preparation.id) }}
                 >
-                  <IconCloseOutline16 size={13} />
+                  <IconCloseOutlineMedium size={13} />
                 </button>
               )}
               {preparation.error === undefined && <span className="dua-file-progress dua-progress-indeterminate" />}
@@ -404,7 +404,7 @@ export function UploadDock({ sessionId, input, store, api, t }: UploadDockProps)
                   aria-label={lc('upload.remove', { name: root.name })}
                   onClick={() => { remove(root) }}
                 >
-                  <IconCloseOutline16 size={13} />
+                  <IconCloseOutlineMedium size={13} />
                 </button>
                 {root.status !== 'ready' && local?.error === undefined && (
                   <span
