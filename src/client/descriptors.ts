@@ -5,19 +5,20 @@ const stringParameter = (name: string, typeSymbol: string): ParameterDescriptor 
   name,
   wire: name,
   source: 'json',
-  codec: { mode: 'strict', typeSymbol, schema: z.string() },
+  codec: { mode: 'strict', typeSymbol, create: () => z.string(), schema: z.string() },
 })
 
 const numberParameter = (name: string, typeSymbol: string): ParameterDescriptor => ({
   name,
   wire: name,
   source: 'json',
-  codec: { mode: 'strict', typeSymbol, schema: z.number().finite().nonnegative() },
+  codec: { mode: 'strict', typeSymbol, create: () => z.number().finite().nonnegative(), schema: z.number().finite().nonnegative() },
 })
 
 const resultCodec = (symbol: string, schema: { parse(value: unknown): unknown }): StrictCodec => ({
   mode: 'strict',
   typeSymbol: symbol,
+  create: () => schema,
   schema,
 })
 

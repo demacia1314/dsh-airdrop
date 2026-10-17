@@ -112,6 +112,7 @@ export interface SessionsFace {
 export interface StrictCodec {
   readonly mode: 'strict'
   readonly typeSymbol: string
+  readonly create?: () => { parse(value: unknown): unknown }
   readonly schema: { parse(value: unknown): unknown }
 }
 

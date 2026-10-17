@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.3 — 2026-10-17
+
+- Fix: provide `create()` factory on strict codecs in parameter and invocation descriptors for DSH 0.2.x compatibility.
+
 ## 0.2.1 — 2026-09-08
 
 - Renamed: the package is now **`dsh-airdrop`**, matching the repository name (was `dsh-universal-attachments`). Session-log manifest fields, the plugin message source name, and the on-disk `.dsh/uploads/.universal-attachments` metadata directory keep being read for backward compatibility; new writes use the airdrop spelling.
