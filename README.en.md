@@ -11,7 +11,7 @@ Even when DSH runs on a remote server, dropping a file works exactly like it doe
 [简体中文](README.md)&ensp;·&ensp;[AI version](README.ai.md)&ensp;·&ensp;[Changelog](CHANGELOG.md)
 
 [![listed on awesome dsh plugin](https://awesome-dsh-plugin.com/badge.svg)](https://awesome-dsh-plugin.com/p/demacia1314/dsh-airdrop/)
-![DSH](https://img.shields.io/badge/DSH-0.1.1--rc.2-4c8dff)
+![DSH](https://img.shields.io/badge/DSH-0.1.5%20%7C%200.2.1-4c8dff)
 ![License](https://img.shields.io/badge/license-MIT-3fb950)
 
 <img src="https://raw.githubusercontent.com/demacia1314/dsh-airdrop/main/assets/in-chat.png" alt="The attachment goes out with the message and the agent reads it" width="880">
@@ -41,7 +41,7 @@ dsh plugin --profile web add dsh-airdrop
 dsh web
 ```
 
-> Restart `dsh web` after installing, and make sure the session has a workspace directory. Naming note: as of 0.2.1 the package is `dsh-airdrop`, matching the repo (the old `dsh-universal-attachments` name is retired); existing sessions' attachment cards and on-disk data keep loading unchanged.
+> Supported hosts: DSH `0.1.5-rc.2` through `<0.2.0`, and DSH `0.2.1-rc.2` through `<0.2.2`. Restart `dsh web` after installing, and make sure the session has a workspace directory. Naming note: as of 0.2.1 the package is `dsh-airdrop`, matching the repo (the old `dsh-universal-attachments` name is retired); existing sessions' attachment cards and on-disk data keep loading unchanged.
 
 <details>
 <summary>Prefer building from source?</summary>

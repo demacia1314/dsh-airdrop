@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react'
 import {
   Button,
-  IconFolderOpenOutline16,
-  IconPaperclipOutline16,
   Menu,
   Tooltip,
   type MenuEntry,
 } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconFolderOpenOutline16, IconPaperclipOutline16 } from './platform/primitive-icons.js'
 import type { SessionId } from '@deepseek-ai/dsh-session'
 import { rootsFromFiles, type UploadRoot } from './files.js'
 import { tr, type LocaleProps } from './locales.js'

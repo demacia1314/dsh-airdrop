@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Add DSH `0.2.1-rc.2` compatibility while retaining the existing `0.1.5` line.
+- Resolve renamed UI primitive icons through a dual-version adapter (`*Medium` on 0.2.1, numeric `*16/*14` on 0.1.5).
+- Emit a producer-owned `dsh-airdrop` message source required by DSH 0.2.1 while continuing to read persisted legacy `plugin` sources.
+
 ## 0.2.3 — 2026-10-17
 
 - Fix: provide `create()` factory on strict codecs in parameter and invocation descriptors for DSH 0.2.x compatibility.

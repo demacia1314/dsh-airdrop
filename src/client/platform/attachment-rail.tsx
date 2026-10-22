@@ -19,7 +19,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import {
   IconChevronLeftOutline14, IconChevronRightOutline14, IconCloseFill14,
-} from '@deepseek-ai/dsh-client-ui-primitives'
+} from './primitive-icons.js'
 
 /** Minimal clsx stand-in for the two-class join used by the rail arrows. */
 function cx(...parts: Array<string | false | undefined>): string {
