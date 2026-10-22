@@ -3,7 +3,7 @@ import {
   IconFolderClose16,
   IconPaperclipOutline16,
   IconPlayOutline16,
-} from '@deepseek-ai/dsh-client-ui-primitives'
+} from './platform/primitive-icons.js'
 import type { ChatNodeViewProps } from '@deepseek-ai/dsh-client-ui-chat/client'
 import type { AttachmentHistoryRoot } from '../shared/manifest.js'
 import { ArchiveGlyph, CodeGlyph, DocGlyph } from './fileicons.js'

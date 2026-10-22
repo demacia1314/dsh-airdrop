@@ -16,7 +16,7 @@ import {
   IconLoadingOutline16,
   IconPaperclipOutline16,
   IconPlayOutline16,
-} from '@deepseek-ai/dsh-client-ui-primitives'
+} from './platform/primitive-icons.js'
 import type { SessionId } from '@deepseek-ai/dsh-session'
 import { ArchiveGlyph, CodeGlyph, DocGlyph } from './fileicons.js'
 import { fileExtension, fileVisualKind } from './filekind.js'
