@@ -1,0 +1,117 @@
+name: Auto Merge
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, ready_for_review, converted_to_draft, edited]
+  workflow_dispatch:
+    inputs:
+      pull_number:
+        description: "PR number to accept (empty = sweep every open PR)"
+        required: false
+        default: ""
+  schedule:
+    - cron: "*/10 * * * *"
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: auto-merge-${{ github.event.pull_request.number || inputs.pull_number || 'sweep' }}
+  cancel-in-progress: false
+
+jobs:
+  accept:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge allowlisted pull requests
+        uses: actions/github-script@v7
+        env:
+          ALLOWLIST: ${{ vars.AUTO_MERGE_ALLOWLIST }}
+          MERGE_METHOD: ${{ vars.AUTO_MERGE_METHOD }}
+          TARGET_PR: ${{ inputs.pull_number }}
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const allowRaw = (process.env.ALLOWLIST || 'demacia1314').trim();
+            const allow = allowRaw.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+            const allowAll = allow.includes('*');
+            const method = (process.env.MERGE_METHOD || 'merge').trim().toLowerCase();
+            const isAllowed = (login) => allowAll || allow.includes(String(login || '').toLowerCase());
+            const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+            async function waitMergeable(number) {
+              for (let i = 0; i < 20; i++) {
+                const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: number });
+                if (pr.state !== 'open') return { pr, state: pr.merged ? 'merged' : 'closed' };
+                if (pr.mergeable === true) return { pr, state: 'ready' };
+                if (pr.mergeable === false) return { pr, state: 'conflict' };
+                await sleep(8000);
+              }
+              return { pr: null, state: 'unknown' };
+            }
+
+            async function accept(number) {
+              const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: number });
+              const login = pr.user.login;
+              if (!isAllowed(login)) { core.info(`skip #${number}: author ${login} is not allowlisted`); return 'not-allowlisted'; }
+              if (pr.draft) { core.info(`skip #${number}: draft PR`); return 'draft'; }
+              if (pr.merged) { core.info(`skip #${number}: already merged`); return 'already-merged'; }
+              if (pr.state !== 'open') { core.info(`skip #${number}: state=${pr.state}`); return 'closed'; }
+
+              const { pr: cur, state } = await waitMergeable(number);
+              if (state === 'merged') return 'already-merged';
+              if (state === 'closed') return 'closed';
+              if (state === 'conflict') { core.warning(`#${number} cannot be merged automatically: conflicts`); return 'conflict'; }
+              const target = cur || pr;
+
+              try {
+                const res = await github.rest.pulls.merge({
+                  owner, repo, pull_number: number,
+                  merge_method: method,
+                  commit_title: `${target.title} (#${number})`,
+                  commit_message: `Auto-merged for ${login}.`,
+                });
+                core.info(`merged #${number} -> ${res.data.sha}`);
+                return 'merged';
+              } catch (e) {
+                core.warning(`direct merge of #${number} failed: ${e.status} ${e.message}`);
+              }
+
+              try {
+                const q = await github.graphql(
+                  `query($owner:String!,$repo:String!,$n:Int!){repository(owner:$owner,name:$repo){pullRequest(number:$n){id}}}`,
+                  { owner, repo, n: number }
+                );
+                await github.graphql(
+                  `mutation($id:ID!,$m:PullRequestMergeMethod!){enablePullRequestAutoMerge(input:{pullRequestId:$id,mergeMethod:$m}){pullRequest{autoMergeRequest{enabledAt}}}}`,
+                  { id: q.repository.pullRequest.id, m: method.toUpperCase() }
+                );
+                core.info(`native auto-merge queued for #${number}`);
+                return 'auto-merge-queued';
+              } catch (e) {
+                core.warning(`queueing native auto-merge for #${number} failed: ${e.message}`);
+                return 'failed';
+              }
+            }
+
+            const results = {};
+            const target = (process.env.TARGET_PR || '').trim();
+
+            if (context.eventName === 'pull_request_target') {
+              const n = context.payload.pull_request.number;
+              results[n] = await accept(n);
+            } else if (target) {
+              results[target] = await accept(Number(target));
+            } else {
+              const open = await github.paginate(github.rest.pulls.list, { owner, repo, state: 'open', per_page: 100 });
+              core.info(`sweep: ${open.length} open pull request(s)`);
+              for (const p of open) results[p.number] = await accept(p.number);
+            }
+
+            const rows = [[{ data: 'PR', header: true }, { data: 'result', header: true }]];
+            for (const [k, v] of Object.entries(results)) rows.push([String(k), String(v)]);
+            await core.summary.addHeading('Auto-merge result').addTable(rows).write();
