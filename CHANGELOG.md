@@ -5,6 +5,7 @@
 - Add DSH `0.2.1-rc.2` compatibility while retaining the existing `0.1.5` line.
 - Resolve renamed UI primitive icons through a dual-version adapter (`*Medium` on 0.2.1, numeric `*16/*14` on 0.1.5).
 - Emit a producer-owned `dsh-airdrop` message source required by DSH 0.2.1 while continuing to read persisted legacy `plugin` sources.
+- Add DSH `0.1.7-alpha` compatibility on top of the same adapter: strict Typert codecs keep their schema factories, and the attachment message source plus primitive icon names are resolved per installed line, so `0.1.7` registers the remotes and renders the existing UI. Legacy `plugin`-source session records remain readable.
 
 ## 0.2.3 — 2026-10-17
 

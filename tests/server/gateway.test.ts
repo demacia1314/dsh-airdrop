@@ -7,7 +7,7 @@ import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { Session, SessionEvent, UserMessage } from '@deepseek-ai/dsh-session'
 import { remoteMethods } from '@deepseek-ai/dsh-typert-protocol'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import DefaultGateway, { AirdropGateway } from '../../src/index.js'
+import DefaultGateway, { AirdropGateway, TYPERT_MANIFEST } from '../../src/index.js'
 import { AirdropBackend } from '../../src/server/backend.js'
 import { attachmentBatchId } from '../../src/server/injection.js'
 import { sessionHash } from '../../src/server/store.js'
@@ -204,6 +204,16 @@ describe('airdrop Gateway claim lifecycle', () => {
       { method: 'submitDraft', invocation: { kind: 'direct' } },
       { method: 'issuePreview', invocation: { kind: 'direct' } },
     ])
+  })
+
+  it('provides schema factories for every host invocation codec', () => {
+    for (const invocation of TYPERT_MANIFEST.invocations) {
+      const codecs = [...invocation.parameters.map((parameter) => parameter.codec), invocation.result]
+      for (const codec of codecs) {
+        expect(typeof codec.create).toBe('function')
+        expect(codec.create().safeParse(undefined).success).toBe(false)
+      }
+    }
   })
 
   it('does not re-inject a committed claim while its durability acknowledgement is still pending', async () => {

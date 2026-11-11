@@ -1,3 +1,5 @@
+export const ATTACHMENT_PLUGIN_NAME = 'dsh-airdrop'
+export const LEGACY_ATTACHMENT_PLUGIN_NAME = 'dsh-universal-attachments'
 export const ATTACHMENT_MANIFEST_VERSION = 1
 export const ATTACHMENT_SOURCE_FIELD = 'airdrop'
 export const ATTACHMENT_ONLY_DRAFT_MARKER = '\u2063'
@@ -5,6 +7,15 @@ export const ATTACHMENT_ONLY_SOURCE_FIELD = 'airdropOnly'
 /** Pre-rename field spellings persisted in older session logs; read-only compat. */
 export const LEGACY_ATTACHMENT_SOURCE_FIELD = 'universalAttachments'
 export const LEGACY_ATTACHMENT_ONLY_SOURCE_FIELD = 'universalAttachmentsOnly'
+
+/** Accept current DSH source kinds and historical plugin records when reading message history. */
+export function isAirdropMessageSource(source: unknown): boolean {
+  return isRecord(source) && (
+    source.kind === ATTACHMENT_PLUGIN_NAME
+    || (source.kind === 'plugin'
+      && (source.plugin === ATTACHMENT_PLUGIN_NAME || source.plugin === LEGACY_ATTACHMENT_PLUGIN_NAME))
+  )
+}
 export interface AttachmentHistoryRoot {
   readonly rootId: string
   readonly name: string
