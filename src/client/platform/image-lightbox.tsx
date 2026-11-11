@@ -17,7 +17,7 @@
 
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { IconCloseOutline16 } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconCloseOutline16 } from './primitive-icons.js'
 
 /** Lightbox strings the owner resolves from its own locale namespace. */
 export interface ImageLightboxLabels {

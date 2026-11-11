@@ -26,9 +26,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isHandledAttachmentContext(source: unknown): boolean {
   return isRecord(source)
-    && source.kind === 'plugin'
-    && (source.plugin === PLUGIN_NAME || source.plugin === LEGACY_PLUGIN_NAME)
     && source.historyHandledBy === 'user-message'
+    && (source.kind === 'dsh-airdrop'
+      || source.kind === 'plugin' && (source.plugin === PLUGIN_NAME || source.plugin === LEGACY_PLUGIN_NAME))
 }
 
 function entryPriority(entry: StoredEntry): number {

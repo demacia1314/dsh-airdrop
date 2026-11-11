@@ -1,9 +1,9 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { ImageLightbox } from './platform/image-lightbox.js'
 import {
-  IconDownloadOutline16,
   Modal,
 } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconDownloadOutline16 } from './platform/primitive-icons.js'
 import { formatSize } from './intake.js'
 import { rpcText, tr } from './locales.js'
 import type { UploadStore } from './store.js'
