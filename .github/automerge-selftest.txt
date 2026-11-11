@@ -1,0 +1,1 @@
+automerge end-to-end self test
